@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\OrdenResource\Pages;
 
 use App\Filament\Resources\OrdenResource;
-use App\Imports\MyOrdenesImport;
+use App\Imports\OrdenImport;
 use App\Models\Orden;
 use EightyNine\ExcelImport\ExcelImportAction;
 use Filament\Actions;
@@ -25,17 +25,14 @@ class ListOrdens extends ListRecords
                     if (!$collection instanceof Collection) {
                         throw new \Exception('Expected instance of Illuminate\Support\Collection, got ' . gettype($collection));
                     }
-    
-                    // Procesa cada fila de la colección
-                    $collection->each(function ($row) {
-                        // Asegúrate de que $row puede ser convertido a array
-                        $data = $row instanceof \Illuminate\Contracts\Support\Arrayable ? $row->toArray() : (array) $row;
-                        Orden::create($data);
-                    });
-    
+
+                    // Importar los datos utilizando la clase OrdenImport
+                    $importer = new OrdenImport();
+                    $importer->collection($collection);
+
                     return $collection; // Retorna la colección si es necesario
-                }),
-            //    ->use(MyOrdenesImport::class),
+                })
+                ->use(OrdenImport::class),
             Actions\CreateAction::make(),
         ];
     }

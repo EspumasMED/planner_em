@@ -9,10 +9,11 @@ use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction as TablesExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class OrdenResource extends Resource
@@ -26,42 +27,32 @@ class OrdenResource extends Resource
         return $form
             ->schema([
                 Forms\Components\TextInput::make('orden')
-                    ->required()
                     ->maxLength(255),
-                Forms\Components\DatePicker::make('fecha_puesta'),
+                Forms\Components\DatePicker::make('fecha_puesta_dis_mat'),
                 Forms\Components\TextInput::make('numero_material')
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('pedido_cliente')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('pos_pedido')
+                Forms\Components\TextInput::make('pos_pedido_cliente')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('cantidad_orden')
-                    ->required()
                     ->numeric(),
-                Forms\Components\TextInput::make('notificados')
-                    ->required()
+                Forms\Components\TextInput::make('cantidad_buena_notificada')
                     ->numeric(),
-                Forms\Components\TextInput::make('referencia_colchon')
-                    ->required()
+                Forms\Components\TextInput::make('Referencia_colchon')
                     ->maxLength(255),
-                Forms\Components\TextInput::make('nombre_cliente')
+                Forms\Components\TextInput::make('nombre')
                     ->maxLength(255),
                 Forms\Components\TextInput::make('denomin_posicion')
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('estado_sistema')
-                    ->required()
                     ->maxLength(255),
                 Forms\Components\TextInput::make('autor')
-                    ->required()
                     ->maxLength(255),
-                Forms\Components\DatePicker::make('fecha_creacion')
-                    ->required(),
-                Forms\Components\TextInput::make('hora_creacion')
-                    ->required(),
-                Forms\Components\DatePicker::make('fecha_liberacion'),
-                Forms\Components\TextInput::make('modificado')
+                Forms\Components\DatePicker::make('fecha_creacion'),
+                Forms\Components\TextInput::make('hora_creacion'),
+                Forms\Components\DatePicker::make('fecha_liberac_real'),
+                Forms\Components\TextInput::make('modificado_por')
                     ->maxLength(255),
                 Forms\Components\DatePicker::make('fecha_fin_notificada'),
             ]);
@@ -73,24 +64,24 @@ class OrdenResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('orden')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('fecha_puesta')
+                Tables\Columns\TextColumn::make('fecha_puesta_dis_mat')
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('numero_material')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('pedido_cliente')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('pos_pedido')
+                Tables\Columns\TextColumn::make('pos_pedido_cliente')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('cantidad_orden')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('notificados')
+                Tables\Columns\TextColumn::make('cantidad_buena_notificada')
                     ->numeric()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('referencia_colchon')
+                Tables\Columns\TextColumn::make('Referencia_colchon')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('nombre_cliente')
+                Tables\Columns\TextColumn::make('nombre')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('denomin_posicion')
                     ->searchable(),
@@ -102,10 +93,10 @@ class OrdenResource extends Resource
                     ->date()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('hora_creacion'),
-                Tables\Columns\TextColumn::make('fecha_liberacion')
+                Tables\Columns\TextColumn::make('fecha_liberac_real')
                     ->date()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('modificado')
+                Tables\Columns\TextColumn::make('modificado_por')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('fecha_fin_notificada')
                     ->date()
@@ -128,10 +119,9 @@ class OrdenResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
-                    ExportBulkAction::make()->exports([
+                    TablesExportBulkAction::make()->exports([
                         ExcelExport::make('table')->fromTable()->withFilename('Ordenes -'. date('Y-m-d')),
                         ExcelExport::make('form')->fromForm()->withFilename('Ordenes -'. date('Y-m-d')),
-                      
                     ])
                 ]),
             ]);

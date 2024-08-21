@@ -19,25 +19,22 @@ class Orden extends Model
      */
     protected $fillable = [
         'orden',
-        'fecha_puesta',
+        'fecha_puesta_dis_mat',
         'numero_material',
         'pedido_cliente',
-        'pos_pedido',
+        'pos_pedido_cliente',
         'cantidad_orden',
-        'notificados',
+        'cantidad_buena_notificada',
         'referencia_colchon',
-        'nombre_cliente',
+        'nombre',
         'denomin_posicion',
         'estado_sistema',
         'autor',
         'fecha_creacion',
-        'hora_creacion', // Asegúrate de incluir este campo
-        'fecha_liberacion',
-        'modificado',
+        'hora_creacion',
+        'fecha_liberac_real',
+        'modificado_por',
         'fecha_fin_notificada',
     ];
     
-    protected $casts = [
-        'hora_creacion' => 'datetime',
-    ];
 }

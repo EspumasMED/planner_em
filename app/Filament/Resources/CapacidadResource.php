@@ -17,7 +17,7 @@ class CapacidadResource extends Resource
 {
     protected static ?string $model = Capacidad::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
 
     public static function form(Form $form): Form
     {
@@ -64,6 +64,7 @@ class CapacidadResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -13,6 +13,7 @@ use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction as TablesExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
@@ -111,7 +112,10 @@ class OrdenResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                DateRangeFilter::make('fecha_creacion')
+                ->label('Fecha de creación')
+                ->placeholder('Seleccionar rango de fechas'),
+            // Puedes añadir más filtros aquí
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

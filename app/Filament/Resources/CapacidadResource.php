@@ -18,6 +18,7 @@ class CapacidadResource extends Resource
     protected static ?string $model = Capacidad::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

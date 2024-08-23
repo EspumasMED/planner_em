@@ -22,6 +22,7 @@ class OrdenResource extends Resource
     protected static ?string $model = Orden::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {

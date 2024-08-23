@@ -2,9 +2,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\CapacidadResource\Pages;
-use App\Filament\Resources\CapacidadResource\RelationManagers;
-use App\Models\Capacidad;
+use App\Filament\Resources\ReferenciaResource\Pages;
+use App\Filament\Resources\ReferenciaResource\RelationManagers;
+use App\Models\Referencia;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -13,26 +13,28 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
-class CapacidadResource extends Resource
+class ReferenciaResource extends Resource
 {
-    protected static ?string $model = Capacidad::class;
+    protected static ?string $model = Referencia::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
-    protected static ?int $navigationSort = 3;
+    protected static ?string $navigationIcon = 'heroicon-o-cube';
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('estacion_trabajo')
+                Forms\Components\TextInput::make('sku')
+                    ->label('SKU')
+                    ->required()
+                    ->numeric(),
+                Forms\Components\TextInput::make('referencia_colchon')
                     ->required()
                     ->maxLength(255),
-                Forms\Components\TextInput::make('numero_maquinas')
+                Forms\Components\TextInput::make('cantidad_procesar')
                     ->required()
-                    ->numeric(),
-                Forms\Components\TextInput::make('tiempo_jornada')
-                    ->required()
-                    ->numeric(),
+                    ->numeric()
+                    ->default(0),
             ]);
     }
 
@@ -40,15 +42,15 @@ class CapacidadResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\TextColumn::make('estacion_trabajo')
-                    ->label('Estación de Trabajo')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('numero_maquinas')
-                    ->label('Numero de maquinas')
+                Tables\Columns\TextColumn::make('sku')
+                    ->label('SKU')
                     ->numeric()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('tiempo_jornada')
-                    ->label('Jornada laboral (minutos)')
+                    ->sortable()
+                    ->searchable()
+                    ->formatStateUsing(fn($state) => (string) $state),
+                Tables\Columns\TextColumn::make('referencia_colchon')
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('cantidad_procesar')
                     ->numeric()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('created_at')
@@ -65,7 +67,6 @@ class CapacidadResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -84,9 +85,9 @@ class CapacidadResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListCapacidads::route('/'),
-            'create' => Pages\CreateCapacidad::route('/create'),
-            'edit' => Pages\EditCapacidad::route('/{record}/edit'),
+            'index' => Pages\ListReferencias::route('/'),
+            'create' => Pages\CreateReferencia::route('/create'),
+            'edit' => Pages\EditReferencia::route('/{record}/edit'),
         ];
     }
 }

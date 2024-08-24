@@ -13,6 +13,7 @@ use Filament\Tables\Actions\ExportBulkAction;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\DB;
 use Malzariey\FilamentDaterangepickerFilter\Filters\DateRangeFilter;
 use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction as TablesExportBulkAction;
 use pxlrbt\FilamentExcel\Exports\ExcelExport;
@@ -22,6 +23,7 @@ class OrdenResource extends Resource
     protected static ?string $model = Orden::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+    protected static ?int $navigationSort = 1;
 
     public static function form(Form $form): Form
     {
@@ -122,7 +124,10 @@ class OrdenResource extends Resource
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make()->after(function () {
+                        // Reinicia el autoincremento después de eliminar los registros
+                        DB::statement('ALTER TABLE ordenes AUTO_INCREMENT = 1');
+                    }),
                     TablesExportBulkAction::make()->exports([
                         ExcelExport::make('table')->fromTable()->withFilename('Ordenes -'. date('Y-m-d')),
                         ExcelExport::make('form')->fromForm()->withFilename('Ordenes -'. date('Y-m-d')),

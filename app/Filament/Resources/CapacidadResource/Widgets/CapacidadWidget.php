@@ -9,6 +9,7 @@ class CapacidadWidget extends Widget
 {
     protected static string $view = 'filament.resources.capacidad-resource.widgets.capacidad-widget';
 
+<<<<<<< HEAD
     public function viewData(): array
     {
         // Consulta la información de la base de datos y realiza el cálculo
@@ -25,4 +26,14 @@ class CapacidadWidget extends Widget
             'capacities' => $capacities,
         ];
     }
+=======
+        // Hacer que el widget ocupe todo el ancho
+        protected int | string | array $columnSpan = 'full';
+
+        public function getCapacidades()
+        {
+            // Obtenemos todas las estaciones de trabajo desde la base de datos
+            return Capacidad::all();
+        }
+>>>>>>> main
 }

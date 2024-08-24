@@ -16,47 +16,50 @@ class OrdenImport implements ToCollection, WithHeadingRow
         $dataToInsert = []; // Array para almacenar todos los registros
 
         foreach ($rows as $row) {
-            try {
-                $data = [
-                    'orden' => $row['orden'] ?? null,
-                    'fecha_puesta_dis_mat' => $this->parseExcelDate($row['fecha_puesta_dismat']),
-                    'numero_material' => $row['numero_material'] ?? null,
-                    'pedido_cliente' => $row['pedido_cliente'] ?? null,
-                    'pos_pedido_cliente' => $row['pospedido_cliente'] ?? null,
-                    'cantidad_orden' => isset($row['cantidad_orden_gmein']) ? (int) $row['cantidad_orden_gmein'] : 0,
-                    'cantidad_buena_notificada' => isset($row['cantidad_buena_notificada_gmein']) ? (int) $row['cantidad_buena_notificada_gmein'] : 0,
-                    'referencia_colchon' => $row['texto_breve_material'] ?? null,
-                    'nombre' => $row['nombre'] ?? null,
-                    'denomin_posicion' => $row['denominposicion'] ?? null,
-                    'estado_sistema' => $row['estado_de_sistema'] ?? null,
-                    'autor' => $row['autor'] ?? null,
-                    'fecha_creacion' => $this->parseExcelDate($row['fecha_de_creacion']),
-                    'hora_creacion' => $this->parseExcelTime($row['hora_creacion']),
-                    'fecha_liberac_real' => $this->parseExcelDate($row['fecha_liberacreal']),
-                    'modificado_por' => $row['modificado_por'] ?? null,
-                    'fecha_fin_notificada' => $this->parseExcelDate($row['fecha_fin_notificada']),
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ];
+            Log::info('Processing row:', $row->toArray()); // Agrega un log para ver el contenido de cada fila
 
-                // // Verificar que las fechas y horas sean válidas
-                // if (!$data['fecha_puesta_dis_mat'] || !$data['fecha_creacion'] || !$data['fecha_liberac_real'] || !$data['fecha_fin_notificada'] || !$data['hora_creacion']) {
-                //     Log::warning('Registro omitido por fechas inválidas', $data);
-                //     continue;
-                // }
+            // Verificar que el campo 'orden' no esté vacío
+            if (empty($row['orden'])) {
+                Log::info('Skipping row due to empty orden:', $row->toArray());
+                continue; // Omitir este registro
+            }
 
-                // Añadir al array de inserción
+            $data = [
+                'orden' => $row['orden'] ?? null,
+                'fecha_puesta_dis_mat' => $this->parseExcelDate($row['fecha_puesta_dismat']),
+                'numero_material' => $row['numero_material'] ?? null,
+                'pedido_cliente' => $row['pedido_cliente'] ?? null,
+                'pos_pedido_cliente' => $row['pospedido_cliente'] ?? null,
+                'cantidad_orden' => isset($row['cantidad_orden_gmein']) ? (int) $row['cantidad_orden_gmein'] : 0,
+                'cantidad_buena_notificada' => isset($row['cantidad_buena_notificada_gmein']) ? (int) $row['cantidad_buena_notificada_gmein'] : 0,
+                'referencia_colchon' => $row['texto_breve_material'] ?? null,
+                'nombre' => $row['nombre'] ?? null,
+                'denomin_posicion' => $row['denominposicion'] ?? null,
+                'estado_sistema' => $row['estado_de_sistema'] ?? null,
+                'autor' => $row['autor'] ?? null,
+                'fecha_creacion' => $this->parseExcelDate($row['fecha_de_creacion']),
+                'hora_creacion' => $this->parseExcelTime($row['hora_creacion']),
+                'fecha_liberac_real' => $this->parseExcelDate($row['fecha_liberacreal']),
+                'modificado_por' => $row['modificado_por'] ?? null,
+                'fecha_fin_notificada' => $this->parseExcelDate($row['fecha_fin_notificada']),
+                'created_at' => now(),
+                'updated_at' => now(),
+            ];
+
+            Log::info('Data to insert:', $data);
+
+            // Añadir al array de inserción solo si los datos son válidos
+            if ($this->isValidData($data)) {
                 $dataToInsert[] = $data;
-
-            } catch (\Exception $e) {
-                Log::error('Error al preparar registro para la inserción: ' . $e->getMessage(), $data);
-                continue;
             }
         }
 
-        // Inserta todos los registros al final del loop
+        // Inserta todos los registros válidos al final del loop
         if (!empty($dataToInsert)) {
+            Log::info('Inserting data:', $dataToInsert); // Agrega un log para ver los datos a insertar
             Orden::insert($dataToInsert); // Inserción masiva
+        } else {
+            Log::info('No valid data to insert.');
         }
     }
 
@@ -88,5 +91,11 @@ class OrdenImport implements ToCollection, WithHeadingRow
         } catch (\Exception $e) {
             return null;
         }
+    }
+
+    private function isValidData($data)
+    {
+        // Implementa validaciones adicionales si es necesario
+        return !empty($data['orden']);
     }
 }

@@ -3,8 +3,10 @@
 namespace App\Filament\Resources\TiempoProduccionResource\Widgets;
 
 use App\Models\Orden;
+use App\Models\Capacidad;
 use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
+use Illuminate\Support\Facades\Log;
 
 class TiempoProduccionWidget extends Widget
 {
@@ -13,6 +15,54 @@ class TiempoProduccionWidget extends Widget
 
     // Hacer que el widget ocupe todo el ancho
     protected int | string | array $columnSpan = 'full';
+
+    /**
+     * Obtiene los datos de tiempos de producción y capacidad.
+     *
+     * @return array
+     */
+    public function getData()
+    {
+        // Obtener los tiempos de producción por estación
+        $totalTimeByStation = Orden::calculateTotalProductionTimeByStation();
+
+        // Depuración: Loguear los tiempos de producción obtenidos
+        Log::info('Total Time by Station:', $totalTimeByStation);
+
+        // Obtener las capacidades por estación
+        $capacidades = Capacidad::all();
+
+        // Depuración: Loguear las capacidades obtenidas
+        Log::info('Capacidades:', $capacidades->toArray());
+
+        // Crear un array que combine los tiempos de producción con la capacidad disponible
+        $data = [];
+        foreach ($capacidades as $capacidad) {
+            $station = $capacidad->estacion_trabajo;
+
+            // Transformar el nombre de la estación en un formato que coincida con las claves del array de tiempos
+            $stationKey = strtolower(str_replace(' ', '_', $station));
+
+            // Verificar si hay tiempo total registrado para la estación; si no, se establece en 0
+            $totalMinutes = $totalTimeByStation[$stationKey] ?? 0;
+
+            // Calcular la capacidad disponible multiplicando el número de máquinas por el tiempo de jornada
+            $capacidadEstacion = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
+
+            // Añadir los datos de la estación al array
+            $data[] = [
+                'station' => $station,
+                'totalMinutes' => $totalMinutes,
+                'capacidadDisponible' => $capacidadEstacion,
+            ];
+        }
+
+        // Depuración: Loguear los datos combinados
+        Log::info('Data for Widget:', $data);
+
+        return $data;
+    }
+
     /**
      * Renderiza el widget y pasa los datos necesarios a la vista.
      *
@@ -20,32 +70,15 @@ class TiempoProduccionWidget extends Widget
      */
     public function render(): View
     {
-        // Llama al método 'calculateTotalProductionTimeByStation' del modelo Orden para obtener el tiempo total de producción por estación
-        $totalTimeByStation = Orden::calculateTotalProductionTimeByStation();
+        // Obtener los datos para la vista
+        $data = $this->getData();
 
-        // // Inicializa un array para almacenar los tiempos en horas y minutos
-        // $timeInHoursAndMinutes = [];
+        // Depuración opcional: Muestra los datos para verificar que se están pasando correctamente
+        // dd($data);
 
-        // // Convierte los tiempos de minutos a horas y minutos para cada estación de trabajo
-        // foreach ($totalTimeByStation as $station => $totalMinutes) {
-        //     // Calcula las horas dividiendo el total de minutos por 60
-        //     $hours = intdiv($totalMinutes, 60);
-        //     // Calcula los minutos restantes utilizando el operador módulo
-        //     $minutes = $totalMinutes % 60;
-        //     // Almacena el tiempo convertido en el array con la clave de la estación correspondiente
-        //     $timeInHoursAndMinutes[$station] = [
-        //         'hours' => $hours,
-        //         'minutes' => $minutes,
-        //     ];
-        // }
-
-        // // Retorna la vista con los datos calculados, pasando el array 'timeInHoursAndMinutes' a la vista
-        // return view(static::$view, [
-        //     'totalTimeByStation' => $timeInHoursAndMinutes,
-        // ]);
-        // Pasar los datos a la vista sin convertirlos a horas y minutos
+        // Pasar los datos a la vista
         return view(static::$view, [
-            'totalTimeByStation' => $totalTimeByStation,
+            'data' => $data,
         ]);
     }
 }

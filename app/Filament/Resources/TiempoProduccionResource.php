@@ -17,7 +17,8 @@ class TiempoProduccionResource extends Resource
 {
     protected static ?string $model = TiempoProduccion::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-clock';
+    protected static ?int $navigationSort = 3;
 
     public static function form(Form $form): Form
     {

@@ -8,7 +8,7 @@
             width: 100%;
             box-sizing: border-box;
         ">
-            @foreach ($totalTimeByStation as $station => $totalMinutes)
+            @foreach ($data as $item)
                 <div style="
                     flex: 1 1 calc(25% - 15px); /* Ajusta el tamaño de las tarjetas a 25% menos el espacio de separación */
                     border: 1px solid #ddd; 
@@ -21,9 +21,10 @@
                     box-sizing: border-box;
                 ">
                     <strong style="display: block; font-size: 16px;">
-                        {{ ucfirst(str_replace('_', ' ', $station)) }}
+                        {{ ucfirst(strtolower($item['station'])) }}
                     </strong>
-                    Tiempo total: {{ $totalMinutes }} minutos
+                    Tiempo total necesario: {{ $item['totalMinutes'] }} minutos<br>
+                    Capacidad disponible: {{ $item['capacidadDisponible'] }} minutos
                 </div>
             @endforeach
         </div>

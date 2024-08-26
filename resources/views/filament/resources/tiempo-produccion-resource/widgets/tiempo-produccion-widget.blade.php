@@ -16,15 +16,16 @@
                     padding: 15px; 
                     text-align: center; 
                     font-size: 14px; 
-                    background-color: #f9f9f9; 
+                    background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }}; /* Verde si es menor o igual, rojo si es mayor */
+                    color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }}; /* Ajuste de color de texto */
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                     box-sizing: border-box;
                 ">
-                    <strong style="display: block; font-size: 16px;">
+                    <strong style="display: block; font-size: 20px;">
                         {{ ucfirst(strtolower($item['station'])) }}
                     </strong>
-                    Tiempo total necesario: {{ $item['totalMinutes'] }} minutos<br>
-                    Capacidad disponible: {{ $item['capacidadDisponible'] }} minutos
+                    T. Necesario: {{ $item['totalMinutes'] }} min<br>
+                    T. Disponible: {{ $item['capacidadDisponible'] }} min
                 </div>
             @endforeach
         </div>

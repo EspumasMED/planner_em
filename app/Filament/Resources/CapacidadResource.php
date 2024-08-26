@@ -24,9 +24,34 @@ class CapacidadResource extends Resource
     {
         return $form
             ->schema([
-                Forms\Components\TextInput::make('estacion_trabajo')
-                    ->required()
-                    ->maxLength(255),
+                Forms\Components\Select::make('estacion_trabajo')
+                ->label('Estación de Trabajo')
+    ->options(function () {
+        // Obtener todas las opciones posibles
+        $allOptions = [
+            'fileteado_tapas' => 'Fileteado Tapas',
+            'fileteado_falsos' => 'Fileteado Falsos',
+            'maquina_rufflex' => 'Máquina Rufflex',
+            'bordadora' => 'Bordadora',
+            'decorado_falso' => 'Decorado Falso',
+            'falso_pillow' => 'Falso Pillow',
+            'encintado' => 'Encintado',
+            'maquina_plana' => 'Máquina Plana',
+            'marquillado' => 'Marquillado',
+            'zona_pega' => 'Zona Pega',
+            'cierre' => 'Cierre',
+            'empaque' => 'Empaque',
+        ];
+
+        // Obtener las opciones ya seleccionadas
+        $usedOptions = Capacidad::pluck('estacion_trabajo')->toArray();
+
+        // Filtrar las opciones disponibles
+        return array_diff_assoc($allOptions, array_flip($usedOptions));
+    })
+    ->required()
+    ->placeholder('Selecciona una estación de trabajo')
+    ->default('Selecciona una estación de trabajo'), // Si deseas un valor predeterminado
                 Forms\Components\TextInput::make('numero_maquinas')
                     ->required()
                     ->numeric(),

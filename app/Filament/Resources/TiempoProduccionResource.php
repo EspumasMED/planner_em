@@ -27,6 +27,8 @@ class TiempoProduccionResource extends Resource
                 Forms\Components\TextInput::make('referencia_colchon')
                     ->required()
                     ->maxLength(255),
+                Forms\Components\TextInput::make('num_cierres')
+                    ->numeric(),
                 Forms\Components\TextInput::make('fileteado_tapas')
                     ->numeric(),
                 Forms\Components\TextInput::make('fileteado_falsos')
@@ -60,6 +62,9 @@ class TiempoProduccionResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('referencia_colchon')
                     ->searchable(),
+                Tables\Columns\TextColumn::make('num_cierres')
+                    ->numeric()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('fileteado_tapas')
                     ->numeric()
                     ->sortable(),

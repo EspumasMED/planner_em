@@ -15,6 +15,8 @@ return new class extends Migration
             $table->id();
             $table->string('referencia_colchon'); // Referencia del colchón
 
+            $table->integer('num_cierres'); //Numero de cierres
+
             // Columnas para cada estación de trabajo, usando decimal para permitir tiempos con decimales
             $table->decimal('fileteado_tapas', 8, 2)->nullable(); // Tiempo en minutos en Fileteado de Tapas
             $table->decimal('fileteado_falsos', 8, 2)->nullable(); // Tiempo en Fileteado de Falsos

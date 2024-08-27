@@ -15,6 +15,7 @@ class TiempoProduccion extends Model
     // Define los campos que pueden ser asignados masivamente
     protected $fillable = [
         'referencia_colchon',
+        'num_cierres',
         'fileteado_tapas',
         'fileteado_falsos',
         'maquina_rufflex',

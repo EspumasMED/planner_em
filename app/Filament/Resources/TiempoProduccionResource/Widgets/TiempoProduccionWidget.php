@@ -8,6 +8,7 @@ use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Widgets\Widget;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 
@@ -28,21 +29,27 @@ class TiempoProduccionWidget extends Widget implements HasForms
 
     // Método que se ejecuta cuando el widget es inicializado
     public function mount()
-    {
-        // Establece startDate al primer día de la semana pasada
-        $this->startDate = now()->subWeek()->toDateString();
-        // Establece endDate a la fecha actual
-        $this->endDate = now()->toDateString();
+{
+    // Obtén la última fecha de la columna 'fecha_creacion' de la tabla 'ordenes'
+    $lastOrderDate = DB::table('ordenes')
+        ->orderBy('fecha_creacion', 'desc')
+        ->value('fecha_creacion');
 
-        // Inicializa el formulario con las fechas predeterminadas
-        $this->form->fill([
-            'startDate' => $this->startDate,
-            'endDate' => $this->endDate,
-        ]);
+    // Si existe una fecha, úsala como startDate; de lo contrario, usa una semana atrás
+    $this->startDate = $lastOrderDate ?? now()->subWeek()->toDateString();
 
-        // Carga los resultados iniciales
-        $this->filterResults();
-    }
+    // Establece endDate a la fecha actual
+    $this->endDate = now()->toDateString();
+
+    // Inicializa el formulario con las fechas predeterminadas
+    $this->form->fill([
+        'startDate' => $this->startDate,
+        'endDate' => $this->endDate,
+    ]);
+
+    // Carga los resultados iniciales
+    $this->filterResults();
+}
 
     // Método para actualizar los datos del widget según el rango de fechas
     public function filterResults()

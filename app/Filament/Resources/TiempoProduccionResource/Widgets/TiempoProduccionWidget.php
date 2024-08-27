@@ -4,81 +4,113 @@ namespace App\Filament\Resources\TiempoProduccionResource\Widgets;
 
 use App\Models\Orden;
 use App\Models\Capacidad;
+use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Contracts\HasForms;
+use Filament\Forms\Form;
 use Filament\Widgets\Widget;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 
-class TiempoProduccionWidget extends Widget
+class TiempoProduccionWidget extends Widget implements HasForms
 {
-    // Especifica la vista que se utilizará para representar el widget
+    use \Filament\Forms\Concerns\InteractsWithForms; // Usa el trait para gestionar formularios
+
+    // Define la vista que se usará para renderizar el widget
     protected static string $view = 'filament.resources.tiempo-produccion-resource.widgets.tiempo-produccion-widget';
 
-    // Hacer que el widget ocupe todo el ancho
+    // Define el ancho del widget en la interfaz
     protected int | string | array $columnSpan = 'full';
 
-    /**
-     * Obtiene los datos de tiempos de producción y capacidad.
-     *
-     * @return array
-     */
+    // Propiedades públicas para manejar las fechas y los datos
+    public $startDate;
+    public $endDate;
+    public $data = [];
+
+    // Método que se ejecuta cuando el widget es inicializado
+    public function mount()
+    {
+        // Establece startDate al primer día de la semana pasada
+        $this->startDate = now()->subWeek()->toDateString();
+        // Establece endDate a la fecha actual
+        $this->endDate = now()->toDateString();
+
+        // Inicializa el formulario con las fechas predeterminadas
+        $this->form->fill([
+            'startDate' => $this->startDate,
+            'endDate' => $this->endDate,
+        ]);
+
+        // Carga los resultados iniciales
+        $this->filterResults();
+    }
+
+    // Método para actualizar los datos del widget según el rango de fechas
+    public function filterResults()
+    {
+        $this->data = $this->getData(); // Llama a getData para obtener los datos filtrados
+    }
+
+    // Método para obtener los datos procesados
     public function getData()
     {
-        // Obtener los tiempos de producción por estación
-        $totalTimeByStation = Orden::calculateTotalProductionTimeByStation();
+        // Calcula el tiempo total de producción por estación en el rango de fechas especificado
+        $totalTimeByStation = Orden::calculateTotalProductionTimeByStation($this->startDate, $this->endDate);
+        Log::info('Total Time by Station:', $totalTimeByStation); // Registra los tiempos totales
 
-        // Depuración: Loguear los tiempos de producción obtenidos
-        Log::info('Total Time by Station:', $totalTimeByStation);
-
-        // Obtener las capacidades por estación
+        // Obtiene la capacidad de todas las estaciones
         $capacidades = Capacidad::all();
+        Log::info('Capacidades:', $capacidades->toArray()); // Registra las capacidades
 
-        // Depuración: Loguear las capacidades obtenidas
-        Log::info('Capacidades:', $capacidades->toArray());
-
-        // Crear un array que combine los tiempos de producción con la capacidad disponible
+        // Crea un array para almacenar los datos procesados
         $data = [];
         foreach ($capacidades as $capacidad) {
-            $station = $capacidad->estacion_trabajo;
+            $station = $capacidad->estacion_trabajo; // Obtiene el nombre de la estación
+            $stationKey = strtolower(str_replace(' ', '_', $station)); // Normaliza el nombre de la estación
+            $totalMinutes = $totalTimeByStation[$stationKey] ?? 0; // Obtiene el tiempo total para la estación
+            $capacidadDisponible = $capacidad->numero_maquinas * $capacidad->tiempo_jornada; // Calcula la capacidad disponible
 
-            // Transformar el nombre de la estación en un formato que coincida con las claves del array de tiempos
-            $stationKey = strtolower(str_replace(' ', '_', $station));
-
-            // Verificar si hay tiempo total registrado para la estación; si no, se establece en 0
-            $totalMinutes = $totalTimeByStation[$stationKey] ?? 0;
-
-            // Calcular la capacidad disponible multiplicando el número de máquinas por el tiempo de jornada
-            $capacidadEstacion = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
-
-            // Añadir los datos de la estación al array
             $data[] = [
                 'station' => $station,
                 'totalMinutes' => $totalMinutes,
-                'capacidadDisponible' => $capacidadEstacion,
+                'capacidadDisponible' => $capacidadDisponible,
             ];
         }
 
-        // Depuración: Loguear los datos combinados
-        Log::info('Data for Widget:', $data);
-
+        Log::info('Data for Widget:', $data); // Registra los datos procesados
         return $data;
     }
 
-    /**
-     * Renderiza el widget y pasa los datos necesarios a la vista.
-     *
-     * @return View
-     */
+    // Define el esquema del formulario con campos de selección de fechas
+    protected function getFormSchema(): array
+    {
+        return [
+            DatePicker::make('startDate') // Campo para seleccionar la fecha de inicio
+                ->label('Fecha de inicio')
+                ->default(now()->subMonth()) // Valor predeterminado: primer día del mes pasado
+                ->required(),
+            DatePicker::make('endDate') // Campo para seleccionar la fecha de fin
+                ->label('Fecha de fin')
+                ->default(now()) // Valor predeterminado: fecha actual
+                ->required(),
+        ];
+    }
+
+    // Método que se llama cuando se actualiza una propiedad del formulario
+    public function updated($propertyName)
+    {
+        if ($propertyName === 'startDate' || $propertyName === 'endDate') {
+            $this->filterResults(); // Filtra resultados si se actualiza alguna de las fechas
+        }
+    }
+
+    // Método para renderizar la vista del widget
     public function render(): View
     {
-        // Obtener los datos para la vista
-        $data = $this->getData();
-
-        // Depuración opcional: Muestra los datos para verificar que se están pasando correctamente
-        // dd($data);
-
-        // Pasar los datos a la vista
         return view(static::$view, [
-            'data' => $data,
+            'data' => $this->data, // Datos procesados para mostrar en la vista
+            'startDate' => $this->startDate, // Fecha de inicio
+            'endDate' => $this->endDate, // Fecha de fin
+            'form' => $this->form, // El formulario para mostrar en la vista
         ]);
     }
 }

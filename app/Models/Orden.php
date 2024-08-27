@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 
 class Orden extends Model
 {
-    use HasFactory;
-    
-    // Especifica el nombre de la tabla en la base de datos
+    use HasFactory; // Usa el trait HasFactory para facilitar la creación de fábricas de modelos
+
+    // Define el nombre de la tabla asociada a este modelo
     protected $table = 'ordenes';
 
-    // Define los campos que pueden ser asignados masivamente
+    // Define los atributos que se pueden asignar masivamente
     protected $fillable = [
         'orden',
         'fecha_puesta_dis_mat',
@@ -34,26 +34,22 @@ class Orden extends Model
         'fecha_fin_notificada',
     ];
 
-    /**
-     * Calcula el tiempo total de producción por estación para todas las órdenes.
-     *
-     * @return array Tiempo total de producción por estación.
-     */
-    public static function calculateTotalProductionTimeByStation()
+    // Método estático para calcular el tiempo total de producción por estación
+    public static function calculateTotalProductionTimeByStation($startDate, $endDate)
     {
-        // Obtener las órdenes agrupadas por 'referencia_colchon' y sumar la cantidad total de cada referencia
+        // Obtiene las órdenes en el rango de fechas especificado
         $orders = DB::table('ordenes')
+            ->whereBetween('fecha_creacion', [$startDate, $endDate])
             ->select('referencia_colchon', DB::raw('SUM(cantidad_orden) as total_quantity'))
             ->groupBy('referencia_colchon')
             ->get();
 
-        // Obtener los tiempos de producción por estación desde la tabla 'tiempos_produccion'
-        // keyBy() organiza los resultados por 'referencia_colchon', permitiendo acceso directo a los tiempos por referencia
+        // Obtiene los tiempos de producción por referencia de colchón
         $timesByStation = DB::table('tiempos_produccion')
             ->get()
             ->keyBy('referencia_colchon');
 
-        // Inicializar un array para almacenar el tiempo total por estación
+        // Inicializa un array con tiempos totales por estación
         $totalTimeByStation = [
             'fileteado_tapas' => 0,
             'fileteado_falsos' => 0,
@@ -69,34 +65,20 @@ class Orden extends Model
             'empaque' => 0,
         ];
 
-        // Recorrer cada orden para calcular el tiempo total por estación
+        // Recorre las órdenes para calcular el tiempo total por estación
         foreach ($orders as $order) {
-            // Obtener la referencia del colchón y la cantidad total de órdenes para esa referencia
-            $referencia = $order->referencia_colchon;
-            $quantity = (float) $order->total_quantity; // Convertir la cantidad a número flotante
+            $referencia = $order->referencia_colchon; // Obtiene la referencia del colchón
+            $quantity = (float) $order->total_quantity; // Obtiene la cantidad total de la orden
 
-            // Verificar si hay tiempos de producción asociados a esta referencia
-            if (isset($timesByStation[$referencia])) {
-                // Obtener los tiempos de producción para la referencia actual
-                $times = $timesByStation[$referencia];
+            if (isset($timesByStation[$referencia])) { // Verifica si hay tiempos para la referencia
+                $times = $timesByStation[$referencia]; // Obtiene los tiempos para la referencia
 
-                // Multiplicar la cantidad de órdenes por el tiempo de producción correspondiente y sumarlo al tiempo total por estación
-                $totalTimeByStation['fileteado_tapas'] += $quantity * (float) $times->fileteado_tapas;
-                $totalTimeByStation['fileteado_falsos'] += $quantity * (float) $times->fileteado_falsos;
-                $totalTimeByStation['maquina_rufflex'] += $quantity * (float) $times->maquina_rufflex;
-                $totalTimeByStation['bordadora'] += $quantity * (float) $times->bordadora;
-                $totalTimeByStation['decorado_falso'] += $quantity * (float) $times->decorado_falso;
-                $totalTimeByStation['falso_pillow'] += $quantity * (float) $times->falso_pillow;
-                $totalTimeByStation['encintado'] += $quantity * (float) $times->encintado;
-                $totalTimeByStation['maquina_plana'] += $quantity * (float) $times->maquina_plana;
-                $totalTimeByStation['marquillado'] += $quantity * (float) $times->marquillado;
-                $totalTimeByStation['zona_pega'] += $quantity * (float) $times->zona_pega;
-                $totalTimeByStation['cierre'] += $quantity * (float) $times->cierre;
-                $totalTimeByStation['empaque'] += $quantity * (float) $times->empaque;
+                foreach ($totalTimeByStation as $station => &$time) { // Recorre cada estación
+                    $time += $quantity * (float) $times->$station; // Calcula el tiempo total para cada estación
+                }
             }
         }
 
-        // Devolver el tiempo total de producción calculado por estación
-        return $totalTimeByStation;
+        return $totalTimeByStation; // Retorna el tiempo total por estación
     }
 }

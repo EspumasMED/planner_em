@@ -1,4 +1,63 @@
 <x-filament-widgets::widget>
+<!-- Sección de formulario en una tarjeta -->
+<!-- Sección de formulario en una tarjeta -->
+<div style="
+    display: flex; 
+    justify-content: flex-end; /* Alinea el formulario a la derecha */
+">
+    <div style="
+        width: 100%; 
+        max-width: 500px; 
+        padding: 10px; 
+        border: 1px solid #ddd; 
+        border-radius: 8px; 
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); 
+        background-color: #fff; /* Fondo blanco */
+        display: flex; 
+        flex-direction: column; 
+        gap: 10px;
+    ">
+        <h3 style="font-size: 16px; margin-bottom: 10px; color: #28a745; font-weight: bold;">Rango de Fechas</h3>
+        <form wire:submit.prevent="filterResults" style="
+            display: flex; 
+            align-items: center; 
+            gap: 10px;
+        ">
+            <div style="
+                display: flex; 
+                flex-direction: column;
+                border: 1px solid #ddd; 
+                border-radius: 4px; 
+                padding: 5px;
+            ">
+                <x-filament::input wire:model="startDate" id="startDate" type="date" style="border: none; padding: 5px; width: 120px; font-weight: bold; color: #28a745;" />
+            </div>
+            <div style="
+                display: flex; 
+                flex-direction: column;
+                border: 1px solid #ddd; 
+                border-radius: 4px; 
+                padding: 5px;
+            ">
+                <x-filament::input wire:model="endDate" id="endDate" type="date" style="border: none; padding: 5px; width: 120px; font-weight: bold; color: #28a745;" />
+            </div>
+            <x-filament::button type="submit" style="
+                padding: 5px 10px; 
+                background-color: #3490dc; 
+                color: white; 
+                border: none; 
+                border-radius: 5px; 
+                cursor: pointer;
+                font-size: 14px;
+            ">
+                Filtrar
+            </x-filament::button>
+        </form>
+    </div>
+</div>
+
+
+
     <x-filament::section>
         <!-- Sección de tarjetas que muestran la capacidad y el tiempo necesario -->
         <div style="
@@ -11,14 +70,14 @@
         ">
             @foreach ($data as $item)
                 <div style="
-                    flex: 1 1 calc(25% - 15px); /* Ajusta el tamaño de las tarjetas a 25% menos el espacio de separación */
+                    flex: 1 1 calc(25% - 15px); 
                     border: 1px solid #ddd; 
                     border-radius: 8px; 
                     padding: 15px; 
                     text-align: center; 
                     font-size: 14px; 
-                    background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }}; /* Verde si es menor o igual, rojo si es mayor */
-                    color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }}; /* Ajuste de color de texto */
+                    background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }};
+                    color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }};
                     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
                     box-sizing: border-box;
                 ">
@@ -33,13 +92,13 @@
     </x-filament::section>
 
     <x-filament::section>
-        <!-- Sección de aviso si el plan no es viable, con filas y columnas -->
+        <!-- Sección de aviso si el plan no es viable -->
         <div style="
-            width: 50%; /* Ajusta el ancho al 50% del contenedor */
+            width: 50%;
             padding: 15px; 
-            border: 1px solid {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }}; /* Rojo si no es viable, verde si es viable */
-            background-color: {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }}; /* Rojo si no es viable, verde si es viable */
-            color: {{ !empty($estacionesNoViables) ? '#721c24' : '#155724' }}; /* Ajuste de color de texto */
+            border: 1px solid {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }};
+            background-color: {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }};
+            color: {{ !empty($estacionesNoViables) ? '#721c24' : '#155724' }};
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             text-align: center;
@@ -53,9 +112,7 @@
             @foreach ($data as $item)
                 @if ($item['totalMinutes'] > $item['capacidadDisponible'])
                     @php
-                        // Calcular el tiempo extra necesario en minutos
                         $extraMinutes = $item['totalMinutes'] - $item['capacidadDisponible'];
-                        // Convertir el tiempo extra a horas y minutos
                         $extraHours = floor($extraMinutes / 60);
                         $remainingMinutes = $extraMinutes % 60;
 
@@ -93,8 +150,8 @@
                     display: block;
                     padding: 10px;
                     border-radius: 8px;
-                    background-color: #d4edda; /* Verde claro para indicar viabilidad */
-                    color: #155724; /* Verde oscuro para el texto */
+                    background-color: #d4edda;
+                    color: #155724;
                 ">El plan es viable para todas las estaciones.</strong>
             @endif
         </div>

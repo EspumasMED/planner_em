@@ -5,6 +5,7 @@ namespace App\Filament\Resources\TiempoProduccionResource\Widgets;
 use App\Models\Orden;
 use App\Models\Capacidad;
 use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
 use Filament\Widgets\Widget;
@@ -14,67 +15,66 @@ use Illuminate\Support\Facades\Log;
 
 class TiempoProduccionWidget extends Widget implements HasForms
 {
-    use \Filament\Forms\Concerns\InteractsWithForms; // Usa el trait para gestionar formularios
+    use \Filament\Forms\Concerns\InteractsWithForms;
 
-    // Define la vista que se usará para renderizar el widget
     protected static string $view = 'filament.resources.tiempo-produccion-resource.widgets.tiempo-produccion-widget';
 
-    // Define el ancho del widget en la interfaz
     protected int | string | array $columnSpan = 'full';
 
-    // Propiedades públicas para manejar las fechas y los datos
     public $startDate;
     public $endDate;
+    public $includeClientes = true;
+    public $includeStock = true;
     public $data = [];
 
-    // Método que se ejecuta cuando el widget es inicializado
     public function mount()
-{
-    // Obtén la última fecha de la columna 'fecha_creacion' de la tabla 'ordenes'
-    $lastOrderDate = DB::table('ordenes')
-        ->orderBy('fecha_creacion', 'desc')
-        ->value('fecha_creacion');
-
-    // Si existe una fecha, úsala como startDate; de lo contrario, usa una semana atrás
-    $this->startDate = $lastOrderDate ?? now()->subWeek()->toDateString();
-
-    // Establece endDate a la fecha actual
-    $this->endDate = now()->toDateString();
-
-    // Inicializa el formulario con las fechas predeterminadas
-    $this->form->fill([
-        'startDate' => $this->startDate,
-        'endDate' => $this->endDate,
-    ]);
-
-    // Carga los resultados iniciales
-    $this->filterResults();
-}
-
-    // Método para actualizar los datos del widget según el rango de fechas
-    public function filterResults()
     {
-        $this->data = $this->getData(); // Llama a getData para obtener los datos filtrados
+        $lastOrderDate = DB::table('ordenes')
+            ->orderBy('fecha_creacion', 'asc')
+            ->value('fecha_creacion');
+
+        $this->startDate = $lastOrderDate ?? now()->subWeek()->toDateString();
+        $this->endDate = now()->toDateString();
+
+        $this->form->fill([
+            'startDate' => $this->startDate,
+            'endDate' => $this->endDate,
+            'includeClientes' => $this->includeClientes,
+            'includeStock' => $this->includeStock,
+        ]);
+
+        $this->filterResults();
     }
 
-    // Método para obtener los datos procesados
+    public function filterResults()
+    {
+        $this->data = $this->getData();
+    }
+
     public function getData()
     {
-        // Calcula el tiempo total de producción por estación en el rango de fechas especificado
-        $totalTimeByStation = Orden::calculateTotalProductionTimeByStation($this->startDate, $this->endDate);
-        Log::info('Total Time by Station:', $totalTimeByStation); // Registra los tiempos totales
+        $query = Orden::whereBetween('fecha_creacion', [$this->startDate, $this->endDate]);
 
-        // Obtiene la capacidad de todas las estaciones
+        if ($this->includeClientes && !$this->includeStock) {
+            $query->whereNotNull('pedido_cliente');
+        } elseif (!$this->includeClientes && $this->includeStock) {
+            $query->whereNull('pedido_cliente');
+        } elseif (!$this->includeClientes && !$this->includeStock) {
+            return []; // No hay datos para mostrar si ambos están desmarcados
+        }
+
+        $totalTimeByStation = $this->calculateTotalProductionTimeByStation($query);
+        Log::info('Total Time by Station:', $totalTimeByStation);
+
         $capacidades = Capacidad::all();
-        Log::info('Capacidades:', $capacidades->toArray()); // Registra las capacidades
+        Log::info('Capacidades:', $capacidades->toArray());
 
-        // Crea un array para almacenar los datos procesados
         $data = [];
         foreach ($capacidades as $capacidad) {
-            $station = $capacidad->estacion_trabajo; // Obtiene el nombre de la estación
-            $stationKey = strtolower(str_replace(' ', '_', $station)); // Normaliza el nombre de la estación
-            $totalMinutes = $totalTimeByStation[$stationKey] ?? 0; // Obtiene el tiempo total para la estación
-            $capacidadDisponible = $capacidad->numero_maquinas * $capacidad->tiempo_jornada; // Calcula la capacidad disponible
+            $station = $capacidad->estacion_trabajo;
+            $stationKey = strtolower(str_replace(' ', '_', $station));
+            $totalMinutes = $totalTimeByStation[$stationKey] ?? 0;
+            $capacidadDisponible = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
 
             $data[] = [
                 'station' => $station,
@@ -83,41 +83,85 @@ class TiempoProduccionWidget extends Widget implements HasForms
             ];
         }
 
-        Log::info('Data for Widget:', $data); // Registra los datos procesados
+        Log::info('Data for Widget:', $data);
         return $data;
     }
 
-    // Define el esquema del formulario con campos de selección de fechas
+    protected function calculateTotalProductionTimeByStation($query)
+    {
+        $orders = $query->select('referencia_colchon', DB::raw('SUM(cantidad_orden) as total_quantity'))
+            ->groupBy('referencia_colchon')
+            ->get();
+
+        $timesByStation = DB::table('tiempos_produccion')
+            ->get()
+            ->keyBy('referencia_colchon');
+
+        $totalTimeByStation = [
+            'fileteado_tapas' => 0,
+            'fileteado_falsos' => 0,
+            'maquina_rufflex' => 0,
+            'bordadora' => 0,
+            'decorado_falso' => 0,
+            'falso_pillow' => 0,
+            'encintado' => 0,
+            'maquina_plana' => 0,
+            'marquillado' => 0,
+            'zona_pega' => 0,
+            'cierre' => 0,
+            'empaque' => 0,
+        ];
+
+        foreach ($orders as $order) {
+            $referencia = $order->referencia_colchon;
+            $quantity = (float) $order->total_quantity;
+
+            if (isset($timesByStation[$referencia])) {
+                $times = $timesByStation[$referencia];
+
+                foreach ($totalTimeByStation as $station => &$time) {
+                    $time += $quantity * (float) $times->$station;
+                }
+            }
+        }
+
+        return $totalTimeByStation;
+    }
+
     protected function getFormSchema(): array
     {
         return [
-            DatePicker::make('startDate') // Campo para seleccionar la fecha de inicio
+            DatePicker::make('startDate')
                 ->label('Fecha de inicio')
-                ->default(now()->subMonth()) // Valor predeterminado: primer día del mes pasado
+                ->default(now()->subMonth())
                 ->required(),
-            DatePicker::make('endDate') // Campo para seleccionar la fecha de fin
+            DatePicker::make('endDate')
                 ->label('Fecha de fin')
-                ->default(now()) // Valor predeterminado: fecha actual
+                ->default(now())
                 ->required(),
+            Checkbox::make('includeClientes')
+                ->label('Incluir Clientes')
+                ->default(true),
+            Checkbox::make('includeStock')
+                ->label('Incluir Stock')
+                ->default(true),
         ];
     }
 
-    // Método que se llama cuando se actualiza una propiedad del formulario
     public function updated($propertyName)
     {
-        if ($propertyName === 'startDate' || $propertyName === 'endDate') {
-            $this->filterResults(); // Filtra resultados si se actualiza alguna de las fechas
-        }
+        $this->filterResults();
     }
 
-    // Método para renderizar la vista del widget
     public function render(): View
     {
         return view(static::$view, [
-            'data' => $this->data, // Datos procesados para mostrar en la vista
-            'startDate' => $this->startDate, // Fecha de inicio
-            'endDate' => $this->endDate, // Fecha de fin
-            'form' => $this->form, // El formulario para mostrar en la vista
+            'data' => $this->data,
+            'startDate' => $this->startDate,
+            'endDate' => $this->endDate,
+            'includeClientes' => $this->includeClientes,
+            'includeStock' => $this->includeStock,
+            'form' => $this->form,
         ]);
     }
 }

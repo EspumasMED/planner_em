@@ -18,18 +18,17 @@ class TiempoProduccionWidget extends Widget implements HasForms
     use \Filament\Forms\Concerns\InteractsWithForms;
 
     protected static string $view = 'filament.resources.tiempo-produccion-resource.widgets.tiempo-produccion-widget';
-
     protected int | string | array $columnSpan = 'full';
 
+    public $clientOrderQuantity = 0;
+    public $stockOrderQuantity = 0;
+    public $clientOrderPercentage = 0;
+    public $stockOrderPercentage = 0;
     public $startDate;
     public $endDate;
     public $includeClientes = true;
     public $includeStock = true;
     public $data = [];
-    public $clientOrderQuantity = 0;
-    public $stockOrderQuantity = 0;
-    public $clientOrderPercentage = 0;
-    public $stockOrderPercentage = 0;
 
     public function mount()
     {
@@ -59,22 +58,22 @@ class TiempoProduccionWidget extends Widget implements HasForms
     {
         $query = Orden::whereBetween('fecha_creacion', [$this->startDate, $this->endDate]);
 
-        // Calcular cantidades totales independientemente de los checkboxes
+        // Aplicar filtros basados en los checkboxes
+        if ($this->includeClientes && !$this->includeStock) {
+            $query->whereNotNull('pedido_cliente');
+        } elseif (!$this->includeClientes && $this->includeStock) {
+            $query->whereNull('pedido_cliente');
+        } elseif (!$this->includeClientes && !$this->includeStock) {
+            $query = $query;
+        }
+
+        // Calcular cantidades y porcentajes basados en los filtros aplicados
         $this->clientOrderQuantity = $query->clone()->whereNotNull('pedido_cliente')->sum('cantidad_orden');
         $this->stockOrderQuantity = $query->clone()->whereNull('pedido_cliente')->sum('cantidad_orden');
 
         $totalOrders = $this->clientOrderQuantity + $this->stockOrderQuantity;
         $this->clientOrderPercentage = $totalOrders > 0 ? ($this->clientOrderQuantity / $totalOrders) * 100 : 0;
         $this->stockOrderPercentage = $totalOrders > 0 ? ($this->stockOrderQuantity / $totalOrders) * 100 : 0;
-
-        // Aplicar filtros de checkbox solo si están marcados
-        if ($this->includeClientes && !$this->includeStock) {
-            $query->whereNotNull('pedido_cliente');
-        } elseif (!$this->includeClientes && $this->includeStock) {
-            $query->whereNull('pedido_cliente');
-        } elseif (!$this->includeClientes && !$this->includeStock) {
-            $query = $query;  // Esto devolverá un conjunto de resultados vacío
-        }
 
         $orders = $query->select('referencia_colchon', DB::raw('SUM(cantidad_orden) as total_quantity'))
             ->groupBy('referencia_colchon')
@@ -132,6 +131,7 @@ class TiempoProduccionWidget extends Widget implements HasForms
         }
 
         Log::info('Data for Widget:', $stationData);
+
         return [
             'stationData' => $stationData,
             'totalClosures' => $totalClosures,
@@ -145,12 +145,15 @@ class TiempoProduccionWidget extends Widget implements HasForms
                 ->label('Fecha de inicio')
                 ->default(now()->subMonth())
                 ->required(),
+
             DatePicker::make('endDate')
                 ->label('Fecha de fin')
                 ->default(now())
                 ->required(),
+
             Checkbox::make('includeClientes')
                 ->label('Incluir Clientes'),
+
             Checkbox::make('includeStock')
                 ->label('Incluir Stock'),
         ];
@@ -175,7 +178,6 @@ class TiempoProduccionWidget extends Widget implements HasForms
             'stockOrderQuantity' => $this->stockOrderQuantity,
             'clientOrderPercentage' => $this->clientOrderPercentage,
             'stockOrderPercentage' => $this->stockOrderPercentage,
-            'form' => $this->form,
         ]);
     }
 }

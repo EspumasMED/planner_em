@@ -21,7 +21,6 @@
                 align-items: center; 
                 justify-content: flex-end;
                 gap: 20px;
-                
             ">
                 <!-- Rango de fechas -->
                 <div style="
@@ -128,7 +127,7 @@
             width: 100%;
             box-sizing: border-box;
         ">
-            @foreach ($data as $item)
+            @foreach ($data['stationData'] as $item)
                 <div style="
                     flex: 1 1 calc(25% - 15px); 
                     border: 1px solid #ddd; 
@@ -144,76 +143,103 @@
                     <strong style="display: block; font-size: 20px;">
                         {{ ucfirst(strtolower($item['station'])) }}
                     </strong>
-                    T. Necesario: {{ $item['totalMinutes'] }} min<br>
-                    T. Disponible: {{ $item['capacidadDisponible'] }} min
+                    T. Necesario: {{ number_format($item['totalMinutes']) }} min<br>
+                    T. Disponible: {{ number_format($item['capacidadDisponible']) }} min
                 </div>
             @endforeach
         </div>
     </x-filament::section>
 
     <x-filament::section>
-        <!-- Sección de aviso si el plan no es viable -->
-        <div style="
-            width: 50%;
-            padding: 15px; 
-            border: 1px solid {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }};
-            background-color: {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }};
-            color: {{ !empty($estacionesNoViables) ? '#721c24' : '#155724' }};
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            text-align: center;
-            margin-top: 20px;
-            box-sizing: border-box;
-        ">
-            @php
-                $estacionesNoViables = [];
-            @endphp
+        <!-- Contenedor flex para alinear las dos tarjetas lado a lado -->
+        <div style="display: flex; gap: 20px; margin-top: 20px;">
+            <!-- Nueva sección para mostrar el resumen de producción -->
+            <div style="
+                flex: 1;
+                padding: 15px; 
+                border: 1px solid #ddd;
+                background-color: #fff;
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            ">
+                <h3 style="font-size: 18px; font-weight: bold; color: #fe890b; margin-bottom: 15px;">Resumen de Producción</h3>
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
+                    <div>
+                        <p style="font-weight: bold; color: #fe890b;">Total Cierres:</p>
+                        <p>{{ number_format($data['totalClosures']) }}</p>
+                    </div>
+                    <div>
+                        <p style="font-weight: bold; color: #fe890b;">Pedidos para clientes:</p>
+                        <p>{{ number_format($clientOrderQuantity) }} ({{ number_format($clientOrderPercentage, 2) }}%)</p>
+                    </div>
+                    <div>
+                        <p style="font-weight: bold; color: #fe890b;">Pedidos para stock:</p>
+                        <p>{{ number_format($stockOrderQuantity) }} ({{ number_format($stockOrderPercentage, 2) }}%)</p>
+                    </div>
+                    <div>
+                        <p style="font-weight: bold; color: #fe890b;">Total de pedidos:</p>
+                        <p>{{ number_format($clientOrderQuantity + $stockOrderQuantity) }}</p>
+                    </div>
+                </div>
+            </div>
 
-            @foreach ($data as $item)
-                @if ($item['totalMinutes'] > $item['capacidadDisponible'])
-                    @php
-                        $extraMinutes = $item['totalMinutes'] - $item['capacidadDisponible'];
-                        $extraHours = floor($extraMinutes / 60);
-                        $remainingMinutes = $extraMinutes % 60;
+            <!-- Sección de aviso si el plan no es viable -->
+            <div style="
+                flex: 1;
+                padding: 15px; 
+                border: 1px solid {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }};
+                background-color: {{ !empty($estacionesNoViables) ? '#f8d7da' : '#d4edda' }};
+                color: {{ !empty($estacionesNoViables) ? '#721c24' : '#155724' }};
+                border-radius: 8px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                text-align: center;
+            ">
+                @php
+                    $estacionesNoViables = [];
+                    foreach ($data['stationData'] as $item) {
+                        if ($item['totalMinutes'] > $item['capacidadDisponible']) {
+                            $extraMinutes = $item['totalMinutes'] - $item['capacidadDisponible'];
+                            $extraHours = floor($extraMinutes / 60);
+                            $remainingMinutes = $extraMinutes % 60;
+                            $estacionesNoViables[] = [
+                                'station' => $item['station'],
+                                'extraHours' => $extraHours,
+                                'remainingMinutes' => $remainingMinutes
+                            ];
+                        }
+                    }
+                @endphp
 
-                        $estacionesNoViables[] = [
-                            'station' => ucfirst(strtolower($item['station'])),
-                            'extraHours' => $extraHours,
-                            'remainingMinutes' => $remainingMinutes
-                        ];
-                    @endphp
-                @endif
-            @endforeach
-
-            @if (!empty($estacionesNoViables))
-                <strong style="color: #721c24;">Este plan NO es viable para las siguientes estaciones:</strong>
-                <table style="width: 100%; margin-top: 15px; border-collapse: collapse; background-color: #f8d7da; color: #721c24;">
-                    <thead>
-                        <tr style="background-color: #f5c6cb;">
-                            <th style="padding: 10px; border: 1px solid #721c24;">Estación</th>
-                            <th style="padding: 10px; border: 1px solid #721c24;">Horas Extra Necesarias</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach ($estacionesNoViables as $estacion)
-                            <tr>
-                                <td style="padding: 10px; border: 1px solid #721c24;">{{ $estacion['station'] }}</td>
-                                <td style="padding: 10px; border: 1px solid #721c24;">
-                                    {{ $estacion['extraHours'] }} horas, {{ $estacion['remainingMinutes'] }} minutos
-                                </td>
+                @if (!empty($estacionesNoViables))
+                    <strong style="color: #721c24;">Este plan NO es viable para las siguientes estaciones:</strong>
+                    <table style="width: 100%; margin-top: 15px; border-collapse: collapse; background-color: #f8d7da; color: #721c24;">
+                        <thead>
+                            <tr style="background-color: #f5c6cb;">
+                                <th style="padding: 10px; border: 1px solid #721c24;">Estación</th>
+                                <th style="padding: 10px; border: 1px solid #721c24;">Horas Extra Necesarias</th>
                             </tr>
-                        @endforeach
-                    </tbody>
-                </table>
-            @else
-                <strong style="
-                    display: block;
-                    padding: 10px;
-                    border-radius: 8px;
-                    background-color: #d4edda;
-                    color: #155724;
-                ">El plan es viable para todas las estaciones.</strong>
-            @endif
+                        </thead>
+                        <tbody>
+                            @foreach ($estacionesNoViables as $estacion)
+                                <tr>
+                                    <td style="padding: 10px; border: 1px solid #721c24;">{{ $estacion['station'] }}</td>
+                                    <td style="padding: 10px; border: 1px solid #721c24;">
+                                        {{ $estacion['extraHours'] }} horas, {{ $estacion['remainingMinutes'] }} minutos
+                                    </td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                @else
+                    <strong style="
+                        display: block;
+                        padding: 10px;
+                        border-radius: 8px;
+                        background-color: #d4edda;
+                        color: #155724;
+                    ">El plan es viable para todas las estaciones.</strong>
+                @endif
+            </div>
         </div>
     </x-filament::section>
 </x-filament-widgets::widget>

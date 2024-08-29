@@ -155,32 +155,40 @@
         <div style="display: flex; gap: 20px; margin-top: 20px;">
             <!-- Nueva sección para mostrar el resumen de producción -->
             <div style="
-                flex: 1;
-                padding: 15px; 
-                border: 1px solid #ddd;
-                background-color: #fff;
-                border-radius: 8px;
-                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             ">
-                <h3 style="font-size: 18px; font-weight: bold; color: #fe890b; margin-bottom: 15px;">Resumen de Producción</h3>
-                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px;">
-                    <div>
-                        <p style="font-weight: bold; color: #fe890b;">Total Cierres:</p>
-                        <p>{{ number_format($data['totalClosures']) }}</p>
-                    </div>
-                    <div>
-                        <p style="font-weight: bold; color: #fe890b;">Pedidos para clientes:</p>
-                        <p>{{ number_format($clientOrderQuantity) }} ({{ number_format($clientOrderPercentage, 2) }}%)</p>
-                    </div>
-                    <div>
-                        <p style="font-weight: bold; color: #fe890b;">Pedidos para stock:</p>
-                        <p>{{ number_format($stockOrderQuantity) }} ({{ number_format($stockOrderPercentage, 2) }}%)</p>
-                    </div>
-                    <div>
-                        <p style="font-weight: bold; color: #fe890b;">Total de pedidos:</p>
-                        <p>{{ number_format($clientOrderQuantity + $stockOrderQuantity) }}</p>
-                    </div>
+            <h3 style="font-size: 18px; font-weight: bold; color: #fe890b; margin-bottom: 15px;">Resumen de Producción</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                <div>
+                    <p style="font-weight: bold; color: #fe890b;">Total Cierres:</p>
+                    <p>{{ number_format($data['totalClosures']) }}</p>
                 </div>
+                <div>
+                    <p style="font-weight: bold; color: #fe890b;">Pedidos clientes:</p>
+                    <p>{{ number_format($clientOrderQuantity) }} ({{ number_format($clientOrderPercentage, 2) }}%)</p>
+                </div>
+                <div>
+                    <p style="font-weight: bold; color: #fe890b;">Pedidos para stock:</p>
+                    <p>{{ number_format($stockOrderQuantity) }} ({{ number_format($stockOrderPercentage, 2) }}%)</p>
+                </div>
+                <div>
+                    <p style="font-weight: bold; color: #fe890b;">Total de pedidos:</p>
+                    <p>{{ number_format($clientOrderQuantity + $stockOrderQuantity) }}</p>
+                </div>
+                <div>
+                    <p style="font-weight: bold; color: #fe890b;">Colchones:</p>
+                    <p>{{ number_format($colchonesCantidad) }} ({{ number_format($colchonesPercentage, 2) }}%)</p>
+                </div>
+                <div>
+                    <p style="font-weight: bold; color: #fe890b;">Colchonetas:</p>
+                    <p>{{ number_format($colchonetasCantidad) }} ({{ number_format($colchonetasPercentage, 2) }}%)</p>
+                </div>
+            </div>
             </div>
 
             <!-- Sección de aviso si el plan no es viable -->

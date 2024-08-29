@@ -1,51 +1,51 @@
 <?php
 
-namespace App\Models; // El modelo pertenece al namespace App\Models
+namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory; // Importa el trait HasFactory para usar fábricas en Eloquent
-use Illuminate\Database\Eloquent\Model; // Importa la clase Model de Eloquent
-use Illuminate\Support\Facades\DB; // Importa la clase DB para realizar consultas directas a la base de datos
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 
-class Orden extends Model // Define la clase Orden que extiende de Model, lo que significa que es un modelo de Eloquent
+class Orden extends Model
 {
-    use HasFactory; // Habilita el uso de fábricas para este modelo
+    // Incluye el trait HasFactory para generar instancias de este modelo usando factories
+    use HasFactory;
 
-    protected $table = 'ordenes'; // Especifica el nombre de la tabla en la base de datos con la que se relaciona este modelo
+    // Define el nombre de la tabla asociada a este modelo
+    protected $table = 'ordenes';
 
-    // Define los campos que se pueden asignar en masa (mass assignment)
+    // Define los campos que se pueden asignar masivamente (mass assignment)
     protected $fillable = [
-        'orden', // Número o identificador de la orden
-        'fecha_puesta_dis_mat', // Fecha en que se dispuso el material
-        'numero_material', // Número de identificación del material
-        'pedido_cliente', // Identificación del pedido del cliente (puede ser nulo si es para stock)
-        'pos_pedido_cliente', // Posición del pedido del cliente
-        'cantidad_orden', // Cantidad de producto en la orden
-        'cantidad_buena_notificada', // Cantidad de productos buenos notificados
-        'referencia_colchon', // Referencia del colchón
-        'nombre', // Nombre del producto o colchón
-        'denomin_posicion', // Denominación de la posición del pedido
-        'estado_sistema', // Estado del sistema para la orden (ej. en proceso, completada)
-        'autor', // Autor que creó o modificó la orden
-        'fecha_creacion', // Fecha de creación de la orden
-        'hora_creacion', // Hora de creación de la orden
-        'fecha_liberac_real', // Fecha de liberación real de la orden
-        'modificado_por', // Usuario que modificó la orden
-        'fecha_fin_notificada', // Fecha en la que se notificó el fin de la orden
+        'orden', 'fecha_puesta_dis_mat', 'numero_material', 'pedido_cliente',
+        'pos_pedido_cliente', 'cantidad_orden', 'cantidad_buena_notificada',
+        'referencia_colchon', 'nombre', 'denomin_posicion', 'estado_sistema',
+        'autor', 'fecha_creacion', 'hora_creacion', 'fecha_liberac_real',
+        'modificado_por', 'fecha_fin_notificada',
     ];
 
-    // Método estático para calcular el tiempo total de producción por estación de trabajo
+    /**
+     * Este método calcula el tiempo total de producción por estación, el total de cierres,
+     * y las cantidades de colchones y colchonetas producidos dentro de un rango de fechas.
+     * Permite filtrar por pedidos de clientes o pedidos de stock.
+     *
+     * @param string $startDate Fecha de inicio para el filtro
+     * @param string $endDate Fecha de fin para el filtro
+     * @param bool $includeClientes Indica si se deben incluir solo pedidos de clientes
+     * @param bool $includeStock Indica si se deben incluir solo pedidos de stock
+     * @return array Un array con el tiempo total por estación, el total de cierres, y las cantidades de colchones y colchonetas
+     */
     public static function calculateTotalProductionTimeByStation($startDate, $endDate, $includeClientes, $includeStock)
     {
-        // Consulta base: Filtra las órdenes dentro del rango de fechas especificado
+        // Inicia una consulta filtrando por el rango de fechas de creación de las órdenes
         $query = self::whereBetween('fecha_creacion', [$startDate, $endDate]);
 
-        // Filtra las órdenes según si se incluyen pedidos de clientes o de stock
+        // Aplica filtros adicionales según si se deben incluir pedidos de clientes o de stock
         if ($includeClientes && !$includeStock) {
-            $query->whereNotNull('pedido_cliente'); // Incluir solo pedidos de clientes
+            $query->whereNotNull('pedido_cliente'); // Solo pedidos de clientes
         } elseif (!$includeClientes && $includeStock) {
-            $query->whereNull('pedido_cliente'); // Incluir solo pedidos de stock
+            $query->whereNull('pedido_cliente'); // Solo pedidos de stock
         } elseif (!$includeClientes && !$includeStock) {
-            // Si no se incluyen ni clientes ni stock, devuelve un conjunto de tiempos vacíos para todas las estaciones
+            // Si no se incluyen ni pedidos de clientes ni de stock, retorna un array de resultados vacíos
             return [
                 'totalTimeByStation' => array_fill_keys([
                     'fileteado_tapas', 'fileteado_falsos', 'maquina_rufflex', 
@@ -54,18 +54,20 @@ class Orden extends Model // Define la clase Orden que extiende de Model, lo que
                     'zona_pega', 'cierre', 'empaque'
                 ], 0),
                 'totalClosures' => 0,
+                'colchonesCantidad' => 0,
+                'colchonetasCantidad' => 0,
             ];
         }
 
-        // Agrupa las órdenes por referencia del colchón y calcula la cantidad total por referencia
+        // Obtiene las órdenes agrupadas por referencia de colchón y calcula la cantidad total por referencia
         $orders = $query->select('referencia_colchon', DB::raw('SUM(cantidad_orden) as total_quantity'))
             ->groupBy('referencia_colchon')
             ->get();
 
-        // Obtiene los tiempos de producción por referencia de colchón y los organiza por referencia
+        // Obtiene los tiempos de producción por referencia de colchón desde el modelo TiempoProduccion
         $timesByStation = TiempoProduccion::all()->keyBy('referencia_colchon');
 
-        // Inicializa un array con los nombres de las estaciones de trabajo y sus tiempos totales en 0
+        // Inicializa un array para almacenar el tiempo total por estación, inicialmente en 0
         $totalTimeByStation = array_fill_keys([
             'fileteado_tapas', 'fileteado_falsos', 'maquina_rufflex', 
             'bordadora', 'decorado_falso', 'falso_pillow', 
@@ -73,31 +75,43 @@ class Orden extends Model // Define la clase Orden que extiende de Model, lo que
             'zona_pega', 'cierre', 'empaque'
         ], 0);
 
-        $totalClosures = 0; // Inicializa el total de cierres en 0
+        // Inicializa variables para el total de cierres y las cantidades de colchones y colchonetas
+        $totalClosures = 0;
+        $colchonesCantidad = 0;
+        $colchonetasCantidad = 0;
 
-        // Recorre cada orden obtenida
+        // Itera sobre las órdenes para calcular los tiempos de producción y las cantidades
         foreach ($orders as $order) {
-            $referencia = $order->referencia_colchon; // Referencia del colchón
-            $quantity = (float) $order->total_quantity; // Cantidad total de la orden
+            $referencia = $order->referencia_colchon;
+            $quantity = (float) $order->total_quantity;
 
-            // Si existen tiempos de producción para esa referencia de colchón
+            // Si se encuentran tiempos de producción para la referencia actual
             if (isset($timesByStation[$referencia])) {
-                $times = $timesByStation[$referencia]; // Obtiene los tiempos para esa referencia
+                $times = $timesByStation[$referencia];
 
-                // Recorre cada estación de trabajo y acumula los tiempos multiplicados por la cantidad
+                // Suma el tiempo total por estación para cada estación en particular
                 foreach ($totalTimeByStation as $station => &$time) {
-                    $time += $quantity * (float) $times->$station; // Incrementa el tiempo por estación
+                    $time += $quantity * (float) $times->$station;
                 }
 
-                // Incrementa el total de cierres
+                // Suma el total de cierres multiplicado por la cantidad de la orden
                 $totalClosures += $quantity * $times->num_cierres;
+            }
+
+            // Identifica si la referencia es de colchones o colchonetas y suma la cantidad correspondiente
+            if (strpos(strtolower($referencia), 'col') === 0) {
+                $colchonesCantidad += $quantity;
+            } elseif (strpos(strtolower($referencia), 'cta') === 0) {
+                $colchonetasCantidad += $quantity;
             }
         }
 
-        // Retorna el tiempo total por estación de trabajo y el total de cierres
+        // Retorna el resultado con el tiempo total por estación, el total de cierres, y las cantidades producidas
         return [
             'totalTimeByStation' => $totalTimeByStation,
             'totalClosures' => $totalClosures,
+            'colchonesCantidad' => $colchonesCantidad,
+            'colchonetasCantidad' => $colchonetasCantidad,
         ];
     }
 }

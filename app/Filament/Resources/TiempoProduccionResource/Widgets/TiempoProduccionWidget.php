@@ -87,7 +87,7 @@ class TiempoProduccionWidget extends Widget implements HasForms
                   ->orWhere('pedido_cliente', '');
             });
         } elseif (!$this->includeClientes && !$this->includeStock) {
-            $query->whereRaw('1 = 0');
+            $query = $query;
         }
 
         $this->clientOrderQuantity = $query->clone()->where(function($q) {

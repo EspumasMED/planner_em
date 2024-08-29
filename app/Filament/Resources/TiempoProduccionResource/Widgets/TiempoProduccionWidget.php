@@ -77,15 +77,26 @@ class TiempoProduccionWidget extends Widget implements HasForms
         $query = Orden::whereBetween('fecha_creacion', [$this->startDate, $this->endDate]);
 
         if ($this->includeClientes && !$this->includeStock) {
-            $query->whereNotNull('pedido_cliente');
+            $query->where(function($q) {
+                $q->whereNotNull('pedido_cliente')
+                  ->where('pedido_cliente', '!=', '');
+            });
         } elseif (!$this->includeClientes && $this->includeStock) {
-            $query->whereNull('pedido_cliente');
+            $query->where(function($q) {
+                $q->whereNull('pedido_cliente')
+                  ->orWhere('pedido_cliente', '');
+            });
         } elseif (!$this->includeClientes && !$this->includeStock) {
-            $query = $query;
+            $query->whereRaw('1 = 0');
         }
 
-        $this->clientOrderQuantity = $query->clone()->whereNotNull('pedido_cliente')->sum('cantidad_orden');
-        $this->stockOrderQuantity = $query->clone()->whereNull('pedido_cliente')->sum('cantidad_orden');
+        $this->clientOrderQuantity = $query->clone()->where(function($q) {
+            $q->whereNotNull('pedido_cliente')->where('pedido_cliente', '!=', '');
+        })->sum('cantidad_orden');
+
+        $this->stockOrderQuantity = $query->clone()->where(function($q) {
+            $q->whereNull('pedido_cliente')->orWhere('pedido_cliente', '');
+        })->sum('cantidad_orden');
 
         $totalOrders = $this->clientOrderQuantity + $this->stockOrderQuantity;
         $this->clientOrderPercentage = $totalOrders > 0 ? ($this->clientOrderQuantity / $totalOrders) * 100 : 0;
@@ -159,7 +170,6 @@ class TiempoProduccionWidget extends Widget implements HasForms
             'stockOrderQuantity' => $this->stockOrderQuantity,
             'clientOrderPercentage' => $this->clientOrderPercentage,
             'stockOrderPercentage' => $this->stockOrderPercentage,
-            'totalClosures' => $this->totalClosures,
             'colchonesCantidad' => $this->colchonesCantidad,
             'colchonetasCantidad' => $this->colchonetasCantidad,
             'colchonesPercentage' => $this->colchonesPercentage,

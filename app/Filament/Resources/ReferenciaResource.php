@@ -19,6 +19,8 @@ class ReferenciaResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
     protected static ?int $navigationSort = 2;
+    protected static ?string $navigationLabel = 'Referencias Colchones';
+    protected static ?string $pluralModelLabel = 'Referencias Colchones';
 
     public static function form(Form $form): Form
     {

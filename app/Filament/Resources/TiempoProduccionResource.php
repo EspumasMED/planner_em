@@ -19,6 +19,8 @@ class TiempoProduccionResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
     protected static ?int $navigationSort = 3;
+    protected static ?string $navigationLabel = 'Tiempos por estacion';
+    protected static ?string $pluralModelLabel = 'Tiempos por estacion';
 
     public static function form(Form $form): Form
     {

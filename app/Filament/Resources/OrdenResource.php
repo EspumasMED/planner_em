@@ -24,6 +24,9 @@ class OrdenResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
     protected static ?int $navigationSort = 1;
+    protected static ?string $navigationLabel = 'Ordenes';
+    protected static ?string $pluralModelLabel = 'Ordenes';
+    
 
     public static function form(Form $form): Form
     {

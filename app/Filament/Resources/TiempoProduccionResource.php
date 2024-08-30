@@ -12,6 +12,9 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction as TablesExportBulkAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
+
 
 class TiempoProduccionResource extends Resource
 {
@@ -121,7 +124,12 @@ class TiempoProduccionResource extends Resource
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                TablesExportBulkAction::make()->exports([
+                    ExcelExport::make('table')->fromTable()->withFilename('ABC ACTUALIZADO -'. date('Y-m-d')),
+                    ExcelExport::make('form')->fromForm()->withFilename('ABC ACTUALIZADO -'. date('Y-m-d')),
+                ])
                 ]),
+                
             ]);
     }
 

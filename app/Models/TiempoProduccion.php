@@ -8,6 +8,11 @@ use Illuminate\Database\Eloquent\Model;
 class TiempoProduccion extends Model
 {
     use HasFactory;
+    /**
+     * The attributes that are mass assignable.
+     *
+     * @var array
+     */
 
     // Especifica el nombre de la tabla en la base de datos
     protected $table = 'tiempos_produccion';

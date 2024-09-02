@@ -18,7 +18,7 @@ class CapacidadResource extends Resource
     protected static ?string $model = Capacidad::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-adjustments-horizontal';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
     protected static ?string $navigationLabel = 'Capacidad del area';
     protected static ?string $pluralModelLabel = 'Capacidad del area';
 

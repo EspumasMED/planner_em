@@ -120,30 +120,11 @@
 
     <x-filament::section>
         <!-- Sección de tarjetas que muestran la capacidad y el tiempo necesario -->
-        <div style="
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            padding: 15px;
-            width: 100%;
-            box-sizing: border-box;
-        ">
-            @foreach ($data['stationData'] as $index => $item)
+        <div style="display: flex; flex-wrap: wrap; gap: 15px; padding: 15px; width: 100%; box-sizing: border-box;">
+            @foreach ($data['stationData'] as $item)
                 <div 
-                    x-on:click="openModal('{{ $item['station'] }}', {{ $item['totalMinutes'] }}, {{ $item['capacidadDisponible'] }})"
-                    style="
-                        flex: 1 1 calc(25% - 15px); 
-                        border: 1px solid #ddd; 
-                        border-radius: 8px; 
-                        padding: 15px; 
-                        text-align: center; 
-                        font-size: 14px; 
-                        background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }};
-                        color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }};
-                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                        box-sizing: border-box;
-                        cursor: pointer;
-                    "
+                    wire:click="openModal('{{ $item['station'] }}', {{ $item['totalMinutes'] }}, {{ $item['capacidadDisponible'] }})"
+                    style="flex: 1 1 calc(25% - 15px); border: 1px solid #ddd; border-radius: 8px; padding: 15px; text-align: center; font-size: 14px; background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }}; color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }}; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); box-sizing: border-box; cursor: pointer;"
                 >
                     <strong style="display: block; font-size: 20px;">
                         {{ ucfirst(strtolower($item['station'])) }}
@@ -154,6 +135,21 @@
             @endforeach
         </div>
     </x-filament::section>
+
+    <!-- Modal -->
+    @if($isModalOpen)
+        <div style="position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
+            <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px;">
+                <span wire:click="closeModal" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
+                <h2 style="color: #fe890b; margin-bottom: 15px;">{{ $modalData['station'] ?? '' }}</h2>
+                <div>
+                    <p>Tiempo Necesario: {{ number_format($modalData['totalMinutes'] ?? 0) }} minutos</p>
+                    <p>Tiempo Disponible: {{ number_format($modalData['capacidadDisponible'] ?? 0) }} minutos</p>
+                    <p>Diferencia: {{ number_format(($modalData['totalMinutes'] ?? 0) - ($modalData['capacidadDisponible'] ?? 0)) }} minutos</p>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <x-filament::section>
         <!-- Contenedor flex para alinear las dos tarjetas lado a lado -->

@@ -1,4 +1,5 @@
 <x-filament-widgets::widget>
+
     <x-filament::section>
         <!-- Sección de formulario en una tarjeta unificada -->
         <x-filament::card
@@ -127,19 +128,23 @@
             width: 100%;
             box-sizing: border-box;
         ">
-            @foreach ($data['stationData'] as $item)
-                <div style="
-                    flex: 1 1 calc(25% - 15px); 
-                    border: 1px solid #ddd; 
-                    border-radius: 8px; 
-                    padding: 15px; 
-                    text-align: center; 
-                    font-size: 14px; 
-                    background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }};
-                    color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }};
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                    box-sizing: border-box;
-                ">
+            @foreach ($data['stationData'] as $index => $item)
+                <div 
+                    x-on:click="openModal('{{ $item['station'] }}', {{ $item['totalMinutes'] }}, {{ $item['capacidadDisponible'] }})"
+                    style="
+                        flex: 1 1 calc(25% - 15px); 
+                        border: 1px solid #ddd; 
+                        border-radius: 8px; 
+                        padding: 15px; 
+                        text-align: center; 
+                        font-size: 14px; 
+                        background-color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#d4edda' : '#f8d7da' }};
+                        color: {{ $item['totalMinutes'] <= $item['capacidadDisponible'] ? '#155724' : '#721c24' }};
+                        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+                        box-sizing: border-box;
+                        cursor: pointer;
+                    "
+                >
                     <strong style="display: block; font-size: 20px;">
                         {{ ucfirst(strtolower($item['station'])) }}
                     </strong>

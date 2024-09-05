@@ -143,9 +143,10 @@
                 <span wire:click="closeModal" style="color: #aaa; float: right; font-size: 28px; font-weight: bold; cursor: pointer;">&times;</span>
                 <h2 style="color: #fe890b; margin-bottom: 15px;">{{ $modalData['station'] ?? '' }}</h2>
                 <div>
-                    <p>Tiempo Necesario: {{ number_format($modalData['totalMinutes'] ?? 0) }} minutos</p>
+                    <h1>Informacion</h1>
+                    {{-- <p>Tiempo Necesario: {{ number_format($modalData['totalMinutes'] ?? 0) }} minutos</p>
                     <p>Tiempo Disponible: {{ number_format($modalData['capacidadDisponible'] ?? 0) }} minutos</p>
-                    <p>Diferencia: {{ number_format(($modalData['totalMinutes'] ?? 0) - ($modalData['capacidadDisponible'] ?? 0)) }} minutos</p>
+                    <p>Diferencia: {{ number_format(($modalData['totalMinutes'] ?? 0) - ($modalData['capacidadDisponible'] ?? 0)) }} minutos</p> --}}
                 </div>
             </div>
         </div>

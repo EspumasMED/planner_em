@@ -13,23 +13,30 @@ return new class extends Migration
     {
         Schema::create('tiempos_produccion', function (Blueprint $table) {
             $table->id();
-            $table->string('referencia_colchon'); // Referencia del colchón
+            $table->string('referencia_colchon');
+            $table->integer('num_cierres');
 
-            $table->integer('num_cierres'); //Numero de cierres
+            // Columnas para cada estación de trabajo existente
+            $table->decimal('fileteado_tapas', 8, 2)->nullable();
+            $table->decimal('fileteado_falsos', 8, 2)->nullable();
+            $table->decimal('maquina_rufflex', 8, 2)->nullable();
+            $table->decimal('bordadora', 8, 2)->nullable();
+            $table->decimal('decorado_falso', 8, 2)->nullable();
+            $table->decimal('falso_pillow', 8, 2)->nullable();
+            $table->decimal('encintado', 8, 2)->nullable();
+            $table->decimal('maquina_plana', 8, 2)->nullable();
+            $table->decimal('marquillado', 8, 2)->nullable();
+            $table->decimal('zona_pega', 8, 2)->nullable();
+            $table->decimal('cierre', 8, 2)->nullable();
+            $table->decimal('empaque', 8, 2)->nullable();
 
-            // Columnas para cada estación de trabajo, usando decimal para permitir tiempos con decimales
-            $table->decimal('fileteado_tapas', 8, 2)->nullable(); // Tiempo en minutos en Fileteado de Tapas
-            $table->decimal('fileteado_falsos', 8, 2)->nullable(); // Tiempo en Fileteado de Falsos
-            $table->decimal('maquina_rufflex', 8, 2)->nullable(); // Tiempo en Máquina Rufflex
-            $table->decimal('bordadora', 8, 2)->nullable(); // Tiempo en Bordadora
-            $table->decimal('decorado_falso', 8, 2)->nullable(); // Tiempo en Decorado Falso
-            $table->decimal('falso_pillow', 8, 2)->nullable(); // Tiempo en Falso Pillow
-            $table->decimal('encintado', 8, 2)->nullable(); // Tiempo en Encintado
-            $table->decimal('maquina_plana', 8, 2)->nullable(); // Tiempo en Máquina Plana
-            $table->decimal('marquillado', 8, 2)->nullable(); // Tiempo en Marquillado
-            $table->decimal('zona_pega', 8, 2)->nullable(); // Tiempo en Zona de Pega
-            $table->decimal('cierre', 8, 2)->nullable(); // Tiempo en Cierre
-            $table->decimal('empaque', 8, 2)->nullable(); // Tiempo en Empaque
+            // Nuevas columnas para las acolchadoras (metros lineales por minuto)
+            $table->decimal('acolchadora_gribetz', 8, 2)->nullable()->default(0.83);
+            $table->decimal('acolchadora_china', 8, 2)->nullable()->default(0.83);
+
+            // Columnas adicionales para cálculos de metros lineales
+            $table->decimal('ancho_banda', 8, 2)->nullable();
+            $table->integer('calibre_colchon')->nullable();
 
             $table->timestamps();
         });
@@ -40,6 +47,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('tiempos_estaciones');
+        Schema::dropIfExists('tiempos_produccion');
     }
 };

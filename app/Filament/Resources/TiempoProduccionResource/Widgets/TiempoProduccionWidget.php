@@ -2,34 +2,26 @@
 
 namespace App\Filament\Resources\TiempoProduccionResource\Widgets;
 
-// Importa los modelos 'Orden' y 'Capacidad'
 use App\Models\Orden;
 use App\Models\Capacidad;
-// Importa los componentes de formularios de Filament
+use App\Models\TiempoProduccion;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Checkbox;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Forms\Form;
-// Importa la clase 'Widget' de Filament
 use Filament\Widgets\Widget;
-// Importa las clases de Laravel necesarias para consultas y logging
 use Illuminate\Support\Facades\DB;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Facades\Log;
 
-// Define una clase que extiende 'Widget' e implementa 'HasForms'
 class TiempoProduccionWidget extends Widget implements HasForms
 {
-    // Usa el trait de Filament para gestionar formularios
     use \Filament\Forms\Concerns\InteractsWithForms;
 
-    // Define la vista que se utilizará para renderizar este widget
     protected static string $view = 'filament.resources.tiempo-produccion-resource.widgets.tiempo-produccion-widget';
     
-    // Define el número de columnas que ocupará el widget en el layout de la página
     protected int | string | array $columnSpan = 'full';
 
-    // Define propiedades públicas para almacenar varios valores del widget
     public $clientOrderQuantity = 0;
     public $stockOrderQuantity = 0;
     public $clientOrderPercentage = 0;
@@ -44,24 +36,32 @@ class TiempoProduccionWidget extends Widget implements HasForms
     public $colchonetasCantidad = 0;
     public $colchonesPercentage = 0;
     public $colchonetasPercentage = 0;
+    public $metrosLinealesGribetz = 0;
+    public $metrosLinealesChina = 0;
+    // Nuevas propiedades para el informe detallado
+    public $cantidadColchonesCalibre1 = 0;
+    public $cantidadColchonesCalibre2 = 0;
+    public $cantidadColchonesCalibre3 = 0;
+    public $cantidadColchonesCalibre4 = 0;
+    public $totalColchonesChina = 0;
+    public $totalColchonesGribetz = 0;
+    public $distribucionCalibre2China = 0;
+    public $distribucionCalibre2Gribetz = 0;
+    public $porcentajeCalibre2China = 0;
+    public $porcentajeCalibre2Gribetz = 0;
 
-    // Nuevas propiedades para gestionar un modal
     public $isModalOpen = false;
     public $modalData = [];
 
-    // Método de inicialización que se ejecuta cuando se monta el componente
     public function mount()
     {
-        // Obtiene la fecha de la primera orden registrada en la base de datos
         $lastOrderDate = DB::table('ordenes')
             ->orderBy('fecha_creacion', 'asc')
             ->value('fecha_creacion');
 
-        // Establece las fechas de inicio y fin, por defecto usando la fecha de la primera orden o una semana atrás
         $this->startDate = $lastOrderDate ?? now()->subWeek()->toDateString();
         $this->endDate = now()->toDateString();
 
-        // Llena el formulario con las fechas de inicio, fin y los checkboxes
         $this->form->fill([
             'startDate' => $this->startDate,
             'endDate' => $this->endDate,
@@ -69,102 +69,159 @@ class TiempoProduccionWidget extends Widget implements HasForms
             'includeStock' => $this->includeStock,
         ]);
 
-        // Filtra los resultados iniciales
         $this->filterResults();
     }
 
-    // Método para filtrar los resultados de acuerdo a los parámetros actuales
     public function filterResults()
     {
-        // Llama al método 'getData' para obtener los datos filtrado
         $this->data = $this->getData();
     }
 
-    // Método que obtiene y calcula los datos basados en las fechas y filtros seleccionados
     public function getData()
-    {
-        // Llama a un método en el modelo 'Orden' para calcular el tiempo total de producción por estación
-        $result = Orden::calculateTotalProductionTimeByStation(
-            $this->startDate,
-            $this->endDate,
-            $this->includeClientes,
-            $this->includeStock
-        );
+{
+    $result = Orden::calculateTotalProductionTimeByStation(
+        $this->startDate,
+        $this->endDate,
+        $this->includeClientes,
+        $this->includeStock
+    );
 
-        // Almacena los resultados del cálculo
-        $totalTimeByStation = $result['totalTimeByStation'];
-        $this->totalClosures = $result['totalClosures'];
-        $this->colchonesCantidad = $result['colchonesCantidad'];
-        $this->colchonetasCantidad = $result['colchonetasCantidad'];
+    $totalTimeByStation = $result['totalTimeByStation'];
+    $this->totalClosures = $result['totalClosures'];
+    $this->colchonesCantidad = $result['colchonesCantidad'];
+    $this->colchonetasCantidad = $result['colchonetasCantidad'];
+    $this->metrosLinealesGribetz = $result['metrosLinealesGribetz'];
+    $this->metrosLinealesChina = $result['metrosLinealesChina'];
 
-        // Crea una consulta para las órdenes filtradas por fecha
-        $query = Orden::whereBetween('fecha_creacion', [$this->startDate, $this->endDate]);
+    // Asignación de datos del informe detallado
+    $this->cantidadColchonesCalibre1 = $result['cantidadColchonesCalibre1'];
+    $this->cantidadColchonesCalibre2 = $result['cantidadColchonesCalibre2'];
+    $this->cantidadColchonesCalibre3 = $result['cantidadColchonesCalibre3'];
+    $this->cantidadColchonesCalibre4 = $result['cantidadColchonesCalibre4'];
+    $this->totalColchonesChina = $result['totalColchonesChina'];
+    $this->totalColchonesGribetz = $result['totalColchonesGribetz'];
+    $this->distribucionCalibre2China = $result['distribucionCalibre2China'];
+    $this->distribucionCalibre2Gribetz = $result['distribucionCalibre2Gribetz'];
+    $this->porcentajeCalibre2China = $result['porcentajeCalibre2China'];
+    $this->porcentajeCalibre2Gribetz = $result['porcentajeCalibre2Gribetz'];
 
-        // Filtra la consulta si se selecciona incluir o excluir clientes y stock
-        if ($this->includeClientes && !$this->includeStock) {
-            $query->where(function($q) {
-                $q->whereNotNull('pedido_cliente')
-                  ->where('pedido_cliente', '!=', '');
-            });
-        } elseif (!$this->includeClientes && $this->includeStock) {
-            $query->where(function($q) {
-                $q->whereNull('pedido_cliente')
-                  ->orWhere('pedido_cliente', '');
-            });
-        } elseif (!$this->includeClientes && !$this->includeStock) {
-            $query = $query;
-        }
+    $query = Orden::whereBetween('fecha_creacion', [$this->startDate, $this->endDate]);
 
-        // Calcula la cantidad total de órdenes de clientes
-        $this->clientOrderQuantity = $query->clone()->where(function($q) {
-            $q->whereNotNull('pedido_cliente')->where('pedido_cliente', '!=', '');
-        })->sum('cantidad_orden');
+    if ($this->includeClientes && !$this->includeStock) {
+        $query->where(function($q) {
+            $q->whereNotNull('pedido_cliente')
+              ->where('pedido_cliente', '!=', '');
+        });
+    } elseif (!$this->includeClientes && $this->includeStock) {
+        $query->where(function($q) {
+            $q->whereNull('pedido_cliente')
+              ->orWhere('pedido_cliente', '');
+        });
+    }
 
-        // Calcula la cantidad total de órdenes de stock
-        $this->stockOrderQuantity = $query->clone()->where(function($q) {
-            $q->whereNull('pedido_cliente')->orWhere('pedido_cliente', '');
-        })->sum('cantidad_orden');
+    $this->clientOrderQuantity = $query->clone()->where(function($q) {
+        $q->whereNotNull('pedido_cliente')->where('pedido_cliente', '!=', '');
+    })->sum('cantidad_orden');
 
-        // Calcula los porcentajes de órdenes de clientes y stock
-        $totalOrders = $this->clientOrderQuantity + $this->stockOrderQuantity;
-        $this->clientOrderPercentage = $totalOrders > 0 ? ($this->clientOrderQuantity / $totalOrders) * 100 : 0;
-        $this->stockOrderPercentage = $totalOrders > 0 ? ($this->stockOrderQuantity / $totalOrders) * 100 : 0;
+    $this->stockOrderQuantity = $query->clone()->where(function($q) {
+        $q->whereNull('pedido_cliente')->orWhere('pedido_cliente', '');
+    })->sum('cantidad_orden');
 
-        // Calcula los porcentajes de colchones y colchonetas
-        $totalProductos = $this->colchonesCantidad + $this->colchonetasCantidad;
-        $this->colchonesPercentage = $totalProductos > 0 ? ($this->colchonesCantidad / $totalProductos) * 100 : 0;
-        $this->colchonetasPercentage = $totalProductos > 0 ? ($this->colchonetasCantidad / $totalProductos) * 100 : 0;
+    $totalOrders = $this->clientOrderQuantity + $this->stockOrderQuantity;
+    $this->clientOrderPercentage = $totalOrders > 0 ? ($this->clientOrderQuantity / $totalOrders) * 100 : 0;
+    $this->stockOrderPercentage = $totalOrders > 0 ? ($this->stockOrderQuantity / $totalOrders) * 100 : 0;
 
-        // Obtiene todas las capacidades de las estaciones de trabajo
-        $capacidades = Capacidad::all();
+    $totalProductos = $this->colchonesCantidad + $this->colchonetasCantidad;
+    $this->colchonesPercentage = $totalProductos > 0 ? ($this->colchonesCantidad / $totalProductos) * 100 : 0;
+    $this->colchonetasPercentage = $totalProductos > 0 ? ($this->colchonetasCantidad / $totalProductos) * 100 : 0;
 
-        // Prepara los datos para cada estación de trabajo
-        $stationData = [];
-        foreach ($capacidades as $capacidad) {
-            $station = $capacidad->estacion_trabajo;
-            $stationKey = strtolower(str_replace(' ', '_', $station));
-            $totalMinutes = $totalTimeByStation[$stationKey] ?? 0;
-            $capacidadDisponible = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
+    $capacidades = Capacidad::all()->keyBy('estacion_trabajo');
 
-            // Almacena los datos de la estación
+    $stationData = [];
+    foreach ($capacidades as $station => $capacidad) {
+        $stationKey = strtolower(str_replace(' ', '_', $station));
+        $capacidadDisponible = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
+
+        if ($station === 'Acolchadora Gribetz') {
             $stationData[] = [
                 'station' => $station,
-                'totalMinutes' => $totalMinutes,
+                'totalMinutes' => round($totalTimeByStation['acolchadora_gribetz']),
+                'totalMetrosLineales' => $this->metrosLinealesGribetz,
+                'capacidadDisponible' => $capacidadDisponible,
+            ];
+        } elseif ($station === 'Acolchadora China') {
+            $stationData[] = [
+                'station' => $station,
+                'totalMinutes' => round($totalTimeByStation['acolchadora_china']),
+                'totalMetrosLineales' => $this->metrosLinealesChina,
+                'capacidadDisponible' => $capacidadDisponible,
+            ];
+        } else {
+            $stationData[] = [
+                'station' => $station,
+                'totalMinutes' => round($totalTimeByStation[$stationKey] ?? 0),
                 'capacidadDisponible' => $capacidadDisponible,
             ];
         }
-
-        // Registra la información de las estaciones en los logs
-        Log::info('Data for Widget:', $stationData);
-
-        // Devuelve los datos de las estaciones y el total de cierres
-        return [
-            'stationData' => $stationData,
-            'totalClosures' => $this->totalClosures,
-        ];
     }
 
-    // Define el esquema del formulario con los componentes DatePicker y Checkbox
+    // Añade logs aquí para verificar que los datos se están asignando correctamente
+    Log::debug("Datos recogidos en el widget:", [
+        'metrosLinealesGribetz' => $this->metrosLinealesGribetz,
+        'metrosLinealesChina' => $this->metrosLinealesChina,
+        'cantidadColchonesCalibre1' => $this->cantidadColchonesCalibre1,
+        'cantidadColchonesCalibre2' => $this->cantidadColchonesCalibre2,
+        'cantidadColchonesCalibre3' => $this->cantidadColchonesCalibre3,
+        'cantidadColchonesCalibre4' => $this->cantidadColchonesCalibre4,
+        'totalColchonesChina' => $this->totalColchonesChina,
+        'totalColchonesGribetz' => $this->totalColchonesGribetz,
+        'distribucionCalibre2China' => $this->distribucionCalibre2China,
+        'distribucionCalibre2Gribetz' => $this->distribucionCalibre2Gribetz,
+        'porcentajeCalibre2China' => $this->porcentajeCalibre2China,
+        'porcentajeCalibre2Gribetz' => $this->porcentajeCalibre2Gribetz,
+    ]);
+
+    return [
+        'stationData' => $stationData,
+        'totalClosures' => $this->totalClosures,
+    ];
+}
+
+    private function prepareStationData($totalTimeByStation)
+{
+    $capacidades = Capacidad::all()->keyBy('estacion_trabajo');
+    $stationData = [];
+
+    foreach ($capacidades as $station => $capacidad) {
+        $stationKey = strtolower(str_replace(' ', '_', $station));
+        $capacidadDisponible = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
+
+        if ($station === 'Acolchadora Gribetz') {
+            $stationData[] = [
+                'station' => $station,
+                'totalMinutes' => round($totalTimeByStation['acolchadora_gribetz']),
+                'totalMetrosLineales' => $this->metrosLinealesGribetz,
+                'capacidadDisponible' => $capacidadDisponible,
+            ];
+        } elseif ($station === 'Acolchadora China') {
+            $stationData[] = [
+                'station' => $station,
+                'totalMinutes' => round($totalTimeByStation['acolchadora_china']),
+                'totalMetrosLineales' => $this->metrosLinealesChina,
+                'capacidadDisponible' => $capacidadDisponible,
+            ];
+        } else {
+            $stationData[] = [
+                'station' => $station,
+                'totalMinutes' => round($totalTimeByStation[$stationKey] ?? 0),
+                'capacidadDisponible' => $capacidadDisponible,
+            ];
+        }
+    }
+
+    return $stationData;
+}
+
     protected function getFormSchema(): array
     {
         return [
@@ -186,37 +243,33 @@ class TiempoProduccionWidget extends Widget implements HasForms
         ];
     }
 
-    // Método que se llama cuando se actualiza alguna propiedad del formulario
     public function updated($propertyName)
     {
-        // Si la propiedad actualizada es relevante para el filtrado, filtra los resultados de nuevo
         if (in_array($propertyName, ['startDate', 'endDate', 'includeClientes', 'includeStock'])) {
             $this->filterResults();
         }
     }
 
-    // Método para abrir el modal con datos específicos de una estación
-    public function openModal($station, $totalMinutes, $capacidadDisponible)
+    public function openModal($station, $totalValue, $capacidadDisponible)
     {
         $this->modalData = [
             'station' => $station,
-            'totalMinutes' => $totalMinutes,
+            'totalValue' => $totalValue,
             'capacidadDisponible' => $capacidadDisponible,
+            'isAcolchadora' => in_array($station, ['Acolchadora Gribetz', 'Acolchadora China']),
         ];
         $this->isModalOpen = true;
     }
 
-    // Método para cerrar el modal
     public function closeModal()
     {
         $this->isModalOpen = false;
     }
 
-    // Método que renderiza la vista del widget, pasando los datos necesarios
     public function render(): View
     {
         return view(static::$view, [
-            'data' => $this->data,
+            'data' => $this->getData(),
             'startDate' => $this->startDate,
             'endDate' => $this->endDate,
             'includeClientes' => $this->includeClientes,
@@ -230,8 +283,21 @@ class TiempoProduccionWidget extends Widget implements HasForms
             'colchonetasCantidad' => $this->colchonetasCantidad,
             'colchonesPercentage' => $this->colchonesPercentage,
             'colchonetasPercentage' => $this->colchonetasPercentage,
+            'metrosLinealesGribetz' => $this->metrosLinealesGribetz,
+            'metrosLinealesChina' => $this->metrosLinealesChina,
             'isModalOpen' => $this->isModalOpen,
             'modalData' => $this->modalData,
+            // Nuevos datos para el informe detallado
+            'cantidadColchonesCalibre1' => $this->cantidadColchonesCalibre1,
+            'cantidadColchonesCalibre2' => $this->cantidadColchonesCalibre2,
+            'cantidadColchonesCalibre3' => $this->cantidadColchonesCalibre3,
+            'cantidadColchonesCalibre4' => $this->cantidadColchonesCalibre4,
+            'totalColchonesChina' => $this->totalColchonesChina,
+            'totalColchonesGribetz' => $this->totalColchonesGribetz,
+            'distribucionCalibre2China' => $this->distribucionCalibre2China,
+            'distribucionCalibre2Gribetz' => $this->distribucionCalibre2Gribetz,
+            'porcentajeCalibre2China' => $this->porcentajeCalibre2China,
+            'porcentajeCalibre2Gribetz' => $this->porcentajeCalibre2Gribetz,
         ]);
     }
 }

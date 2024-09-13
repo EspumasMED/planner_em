@@ -28,11 +28,15 @@ class TiempoProduccionImport implements WithHeadingRow, ToCollection
                 'marquillado',
                 'zona_pega',
                 'cierre',
-                'empaque'
+                'empaque',
+                'acolchadora_gribetz',
+                'acolchadora_china',
+                'ancho_banda',
+                'calibre_colchon'
             ];
 
             foreach ($fields as $field) {
-                if (!empty($row[$field])) {
+                if (isset($row[$field]) && $row[$field] !== '') {
                     $data[$field] = $row[$field];
                 }
             }

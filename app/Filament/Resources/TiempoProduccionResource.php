@@ -58,6 +58,14 @@ class TiempoProduccionResource extends Resource
                     ->numeric(),
                 Forms\Components\TextInput::make('empaque')
                     ->numeric(),
+                Forms\Components\TextInput::make('calibre_colchon')
+                    ->numeric(),
+                Forms\Components\TextInput::make('ancho_banda')
+                    ->numeric(),
+                Forms\Components\TextInput::make('acolchadora_gribetz')
+                    ->numeric(),
+                Forms\Components\TextInput::make('acolchadora_china')
+                    ->numeric(),
             ]);
     }
 
@@ -106,6 +114,18 @@ class TiempoProduccionResource extends Resource
                 Tables\Columns\TextColumn::make('empaque')
                     ->numeric()
                     ->sortable(),
+                Tables\Columns\TextColumn::make('ancho_banda')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('calibre_colchon')
+                    ->numeric()
+                    ->sortable(),
+                    Tables\Columns\TextColumn::make('acolchadora_gribetz')
+                    ->numeric()
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('acolchadora_china')
+                    ->numeric()
+                    ->sortable(),    
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

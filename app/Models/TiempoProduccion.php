@@ -8,16 +8,9 @@ use Illuminate\Database\Eloquent\Model;
 class TiempoProduccion extends Model
 {
     use HasFactory;
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array
-     */
 
-    // Especifica el nombre de la tabla en la base de datos
     protected $table = 'tiempos_produccion';
 
-    // Define los campos que pueden ser asignados masivamente
     protected $fillable = [
         'referencia_colchon',
         'num_cierres',
@@ -33,6 +26,10 @@ class TiempoProduccion extends Model
         'zona_pega',
         'cierre',
         'empaque',
+        'acolchadora_gribetz',
+        'acolchadora_china',
+        'ancho_banda',
+        'calibre_colchon',
     ];
 
     /**
@@ -43,10 +40,8 @@ class TiempoProduccion extends Model
      */
     public static function getTimesByReference($referenciaColchon)
     {
-        // Busca los tiempos de producción para la referencia de colchón especificada en la tabla
         $times = self::where('referencia_colchon', $referenciaColchon)->first();
 
-        // Si no se encuentra ningún registro, se devuelve un array con todos los tiempos en 0
         if (!$times) {
             return [
                 'fileteado_tapas' => 0,
@@ -61,11 +56,14 @@ class TiempoProduccion extends Model
                 'zona_pega' => 0,
                 'cierre' => 0,
                 'empaque' => 0,
+                'acolchadora_gribetz' => 0.83, // Metros lineales por minuto
+                'acolchadora_china' => 0.83,   // Metros lineales por minuto
+                'ancho_banda' => 0,
+                'calibre_colchon' => 0,
+                'num_cierres' => 0,
             ];
         }
 
-        // Si se encuentra el registro, se devuelve un array con los tiempos por estación
-        // Utiliza el operador de coalescencia nula (??) para devolver 0 si algún valor está vacío o es nulo
         return [
             'fileteado_tapas' => $times->fileteado_tapas ?? 0,
             'fileteado_falsos' => $times->fileteado_falsos ?? 0,
@@ -79,6 +77,35 @@ class TiempoProduccion extends Model
             'zona_pega' => $times->zona_pega ?? 0,
             'cierre' => $times->cierre ?? 0,
             'empaque' => $times->empaque ?? 0,
+            'acolchadora_gribetz' => $times->acolchadora_gribetz ?? 0.83,
+            'acolchadora_china' => $times->acolchadora_china ?? 0.83,
+            'ancho_banda' => $times->ancho_banda ?? 0,
+            'calibre_colchon' => $times->calibre_colchon ?? 0,
+            'num_cierres' => $times->num_cierres ?? 0,
         ];
+    }
+
+    /**
+     * Obtiene el ancho de banda para una referencia de colchón específica.
+     *
+     * @param string $referenciaColchon
+     * @return float
+     */
+    public static function getAnchoBanda($referenciaColchon)
+    {
+        $tiempo = self::where('referencia_colchon', $referenciaColchon)->first();
+        return $tiempo ? $tiempo->ancho_banda : 0;
+    }
+
+    /**
+     * Obtiene el calibre del colchón para una referencia específica.
+     *
+     * @param string $referenciaColchon
+     * @return int
+     */
+    public static function getCalibreColchon($referenciaColchon)
+    {
+        $tiempo = self::where('referencia_colchon', $referenciaColchon)->first();
+        return $tiempo ? $tiempo->calibre_colchon : 0;
     }
 }

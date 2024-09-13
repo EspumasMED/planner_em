@@ -129,14 +129,21 @@
                     <strong style="display: block; font-size: 20px;">
                         {{ ucfirst(strtolower($item['station'])) }}
                     </strong>
-                    T. Necesario: {{ number_format($item['totalMinutes']) }} min<br>
-                    T. Disponible: {{ number_format($item['capacidadDisponible']) }} min
+                    @if($item['station'] === 'Acolchadora Gribetz' || $item['station'] === 'Acolchadora China')
+                        T. Necesario: {{ number_format($item['totalMinutes']) }} min<br>
+                        T. Disponible: {{ number_format($item['capacidadDisponible']) }} min<br>
+                        M. Lineales: {{ number_format($item['totalMetrosLineales'], 2) }} m
+                    @else
+                        T. Necesario: {{ number_format($item['totalMinutes']) }} min<br>
+                        T. Disponible: {{ number_format($item['capacidadDisponible']) }} min
+                    @endif
                 </div>
             @endforeach
         </div>
     </x-filament::section>
 
     <!-- Modal -->
+    
     @if($isModalOpen)
         <div style="position: fixed; z-index: 1; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.4);">
             <div style="background-color: #fefefe; margin: 15% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px;">
@@ -144,7 +151,7 @@
                 <h2 style="color: #fe890b; margin-bottom: 15px;">{{ $modalData['station'] ?? '' }}</h2>
                 <div>
                     <h1>Informacion</h1>
-                    {{-- <p>Tiempo Necesario: {{ number_format($modalData['totalMinutes'] ?? 0) }} minutos</p>
+                    {{--<p>Tiempo Necesario: {{ number_format($modalData['totalMinutes'] ?? 0) }} minutos</p>
                     <p>Tiempo Disponible: {{ number_format($modalData['capacidadDisponible'] ?? 0) }} minutos</p>
                     <p>Diferencia: {{ number_format(($modalData['totalMinutes'] ?? 0) - ($modalData['capacidadDisponible'] ?? 0)) }} minutos</p> --}}
                 </div>
@@ -226,7 +233,7 @@
                         <thead>
                             <tr style="background-color: #f5c6cb;">
                                 <th style="padding: 10px; border: 1px solid #721c24;">Estación</th>
-                                <th style="padding: 10px; border: 1px solid #721c24;">Horas Extra Necesarias</th>
+                                <th style="padding: 10px; border: 1px solid #721c24;">Tiempo Extra Necesarias</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -249,6 +256,43 @@
                         color: #155724;
                     ">El plan es viable para todas las estaciones.</strong>
                 @endif
+            </div>
+        </div>
+    </x-filament::section>
+    <x-filament::section>
+        <div style="
+            padding: 15px;
+            border: 1px solid #ddd;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        ">
+            <h3 style="font-size: 18px; font-weight: bold; color: #fe890b; margin-bottom: 15px;">Informe de acolchados</h3>
+            
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                <div>
+                    <h4 style="font-size: 16px; color: #fe890b; margin-bottom: 10px;">Colchones por Calibre de Acolchado</h4>
+                    <ul style="list-style-type: none; padding: 0; display: grid; grid-template-columns: repeat(2, 2fr); ">
+                        <li><p style="color: #fe890b; display: inline;">Calibre 1:</p> {{ number_format($cantidadColchonesCalibre1) }} COL</li>
+                        <li><p style="color: #fe890b; display: inline;">Calibre 2:</p> {{ number_format($cantidadColchonesCalibre2) }} COL</li>
+                        <li><p style="color: #fe890b; display: inline;">Calibre 3:</p> {{ number_format($cantidadColchonesCalibre3) }} COL</li>
+                        <li><p style="color: #fe890b; display: inline;">Calibre 4:</p> {{ number_format($cantidadColchonesCalibre4) }} COL</li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="font-size: 16px; color: #fe890b; margin-bottom: 10px;">Distribución de Calibre 2</h4>
+                    <p><p style="color: #fe890b; display: inline;">China:</p> <strong>{{ number_format($distribucionCalibre2China) }} COL, ({{ number_format($porcentajeCalibre2China, 1) }}% Acolchado)</strong></p>
+                    <p><p style="color: #fe890b; display: inline;">Gribetz:</p> <strong>{{ number_format($distribucionCalibre2Gribetz) }} COL,  ({{ number_format($porcentajeCalibre2Gribetz, 1) }}% Acolchado)</strong></p>
+                </div>
+                
+                <div>
+                    <h4 style="font-size: 16px; color: #fe890b; margin-bottom: 10px;">Acolchados</h4>
+                    <ul style="list-style-type: none; padding: 0;">
+                        <li><p style="color: #fe890b; display: inline;">Total para China:</p> <strong>{{ number_format($totalColchonesChina) }} COL, {{ number_format($metrosLinealesChina) }}m. lineales</strong></li>
+                        <li><p style="color: #fe890b; display: inline;">Total para Gribetz:</p> <strong>{{ number_format($totalColchonesGribetz) }} COL, {{ number_format($metrosLinealesGribetz) }}m. lineales</strong></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </x-filament::section>

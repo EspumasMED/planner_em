@@ -31,6 +31,8 @@ class CapacidadResource extends Resource
     ->options(function () {
         // Obtener todas las opciones posibles
         $allOptions = [
+            'acolchadora_gribetz' => 'Acolchadora Gribetz',
+            'acolchadora_china' => 'Acolchadora China',
             'fileteado_tapas' => 'Fileteado Tapas',
             'fileteado_falsos' => 'Fileteado Falsos',
             'maquina_rufflex' => 'Máquina Rufflex',

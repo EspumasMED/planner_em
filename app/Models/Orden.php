@@ -40,35 +40,18 @@ class Orden extends Model
                   ->orWhere('pedido_cliente', '');
             });
         } elseif (!$includeClientes && !$includeStock) {
-            return [
-                'totalTimeByStation' => array_fill_keys([
-                    'fileteado_tapas', 'fileteado_falsos', 'maquina_rufflex',
-                    'bordadora', 'decorado_falso', 'falso_pillow',
-                    'encintado', 'maquina_plana', 'marquillado',
-                    'zona_pega', 'cierre', 'empaque',
-                    'acolchadora_gribetz', 'acolchadora_china'
-                ], 0),
-                'totalClosures' => 0,
-                'colchonesCantidad' => 0,
-                'colchonetasCantidad' => 0,
-                'metrosLinealesGribetz' => 0,
-                'metrosLinealesChina' => 0,
-                'cantidadColchonesCalibre1' => 0,
-                'cantidadColchonesCalibre2' => 0,
-                'cantidadColchonesCalibre3' => 0,
-                'cantidadColchonesCalibre4' => 0,
-                'totalColchonesChina' => 0,
-                'totalColchonesGribetz' => 0,
-                'distribucionCalibre2China' => 0,
-                'distribucionCalibre2Gribetz' => 0,
-                'porcentajeCalibre2China' => 0,
-                'porcentajeCalibre2Gribetz' => 0,
-            ];
+            return self::getEmptyResults();
         }
 
         $orders = $query->select('referencia_colchon', DB::raw('SUM(cantidad_orden) as total_quantity'))
             ->groupBy('referencia_colchon')
             ->get();
+
+        // Si no hay órdenes, retornar resultados vacíos
+        if ($orders->isEmpty()) {
+            Log::debug('No se encontraron órdenes para procesar.');
+            return self::getEmptyResults();
+        }
 
         $timesByStation = TiempoProduccion::all()->keyBy('referencia_colchon');
 
@@ -91,6 +74,7 @@ class Orden extends Model
         $cantidadColchonesCalibre4 = 0;
         $totalColchonesChina = 0;
         $totalColchonesGribetz = 0;
+        $anchoTapaGlobal = 0;
 
         Log::debug('Órdenes procesadas: ' . $orders->count());
 
@@ -116,6 +100,7 @@ class Orden extends Model
             $totalClosures = round($totalClosures + $quantity * $times->num_cierres, 1);
 
             $anchoTapa = self::getAnchoTapa($referencia); // En cm
+            $anchoTapaGlobal = $anchoTapa; // Guardamos el ancho de tapa para uso posterior
             $anchoBanda = self::getAnchoBanda($referencia); // En cm
             $perimetro = self::getPerimetro($anchoTapa); // En cm
             
@@ -126,33 +111,28 @@ class Orden extends Model
                 continue;
             }
 
-            // Cálculo de metros lineales para bandas (todos los calibres)
-            $bandasPorAncho = floor(200 / $anchoBanda); // Número de bandas que caben en el ancho de la máquina
-            $metrosLinealesBandas = ($quantity * $perimetro) / $bandasPorAncho / 100; // Convertimos cm a m
+            $bandasPorAncho = floor(200 / $anchoBanda);
+            $metrosLinealesBandas = ($quantity * $perimetro) / $bandasPorAncho / 100;
             $metrosLinealesChina += $metrosLinealesBandas;
 
             Log::debug("Bandas por ancho: $bandasPorAncho, Metros lineales de bandas para China: $metrosLinealesBandas");
 
-                Log::debug("Bandas por ancho: $bandasPorAncho, Metros lineales de bandas para China: $metrosLinealesBandas");
+            $metrosLinealesTapas = ($anchoTapa * 2 * $quantity) / 100;
 
-                // Cálculos para tapas
-                $metrosLinealesTapas = ($anchoTapa * 2 * $quantity) / 100; // Convertimos cm a m
-
-                switch ($times->calibre_colchon) {
-                    case 1:
-                        $cantidadColchonesCalibre1 += $quantity;
-                        $metrosLinealesChina += $metrosLinealesTapas;
-                        $totalColchonesChina += $quantity;
-                        Log::debug("Metros lineales de tapas calibre 1 para China: $metrosLinealesTapas");
-                        break;
+            switch ($times->calibre_colchon) {
+                case 1:
+                    $cantidadColchonesCalibre1 += $quantity;
+                    $metrosLinealesChina += $metrosLinealesTapas;
+                    $totalColchonesChina += $quantity;
+                    Log::debug("Metros lineales de tapas calibre 1 para China: $metrosLinealesTapas");
+                    break;
                 case 2:
                     $cantidadColchonesCalibre2 += $quantity;
-                    // La distribución de calibre 2 se hará más adelante
                     Log::debug("Metros lineales de tapas calibre 2 acumulados: $metrosLinealesTapas");
                     break;
                 case 3:
                 case 4:
-                    $cantidadColchonesCalibre3 += $quantity; // Combinamos calibre 3 y 4
+                    $cantidadColchonesCalibre3 += $quantity;
                     $metrosLinealesGribetz += $metrosLinealesTapas;
                     $totalColchonesGribetz += $quantity;
                     Log::debug("Metros lineales de tapas calibre 3/4 para Gribetz: $metrosLinealesTapas");
@@ -166,33 +146,35 @@ class Orden extends Model
             }
         }
 
-        // Distribuir tapas de calibre 2 entre Gribetz y China
-        $totalTapasCalibr2 = ($cantidadColchonesCalibre2 * $anchoTapa * 2) / 100; // Convertimos cm a m
-        $porcentajeGribetz = $metrosLinealesGribetz / ($metrosLinealesGribetz + $metrosLinealesChina);
-        $porcentajeChina = 1 - $porcentajeGribetz;
+        $totalMetrosLineales = $metrosLinealesGribetz + $metrosLinealesChina;
+        if ($totalMetrosLineales > 0) {
+            $porcentajeGribetz = $metrosLinealesGribetz / $totalMetrosLineales;
+            $porcentajeChina = $metrosLinealesChina / $totalMetrosLineales;
+        } else {
+            $porcentajeGribetz = $porcentajeChina = 0;
+        }
 
-        $tapasCalibr2Gribetz = $totalTapasCalibr2 * $porcentajeChina; // Cambiado de $porcentajeChina a $porcentajeGribetz
-        $tapasCalibr2China = $totalTapasCalibr2 * $porcentajeGribetz; // Cambiado de $porcentajeGribetz a $porcentajeChina
+        $totalTapasCalibr2 = ($cantidadColchonesCalibre2 * $anchoTapaGlobal * 2) / 100;
+        $tapasCalibr2Gribetz = $totalTapasCalibr2 * $porcentajeChina;
+        $tapasCalibr2China = $totalTapasCalibr2 * $porcentajeGribetz;
 
         $metrosLinealesGribetz += $tapasCalibr2Gribetz;
         $metrosLinealesChina += $tapasCalibr2China;
 
-        $distribucionCalibre2Gribetz = round($tapasCalibr2Gribetz / (($anchoTapa * 2) / 100)); // Convertimos m a cantidad
+        $distribucionCalibre2Gribetz = $anchoTapaGlobal != 0 ? round($tapasCalibr2Gribetz / (($anchoTapaGlobal * 2) / 100)) : 0;
         $distribucionCalibre2China = $cantidadColchonesCalibre2 - $distribucionCalibre2Gribetz;
 
         $totalColchonesGribetz += $distribucionCalibre2Gribetz;
         $totalColchonesChina += $distribucionCalibre2China;
 
-        // Asegurémonos de que los porcentajes estén correctamente asignados
         $porcentajeCalibre2Gribetz = $porcentajeGribetz * 100;
         $porcentajeCalibre2China = $porcentajeChina * 100;
 
         Log::debug("Distribución de tapas calibre 2: Gribetz: $tapasCalibr2Gribetz m ($porcentajeCalibre2Gribetz%), China: $tapasCalibr2China m ($porcentajeCalibre2China%)");
 
-        // Calcular tiempo total para acolchadoras (50 metros por hora = 0.8333 metros por minuto)
         $metrosPorMinuto = 50 / 60;
-        $tiempoTotalGribetz = round($metrosLinealesGribetz / $metrosPorMinuto, 1);
-        $tiempoTotalChina = round($metrosLinealesChina / $metrosPorMinuto, 1);
+        $tiempoTotalGribetz = $metrosPorMinuto != 0 ? round($metrosLinealesGribetz / $metrosPorMinuto, 1) : 0;
+        $tiempoTotalChina = $metrosPorMinuto != 0 ? round($metrosLinealesChina / $metrosPorMinuto, 1) : 0;
 
         $totalTimeByStation['acolchadora_gribetz'] = $tiempoTotalGribetz;
         $totalTimeByStation['acolchadora_china'] = $tiempoTotalChina;
@@ -214,13 +196,41 @@ class Orden extends Model
             'cantidadColchonesCalibre1' => $cantidadColchonesCalibre1,
             'cantidadColchonesCalibre2' => $cantidadColchonesCalibre2,
             'cantidadColchonesCalibre3' => $cantidadColchonesCalibre3,
-            'cantidadColchonesCalibre4' => 0, // Ahora está incluido en cantidadColchonesCalibre3
+            'cantidadColchonesCalibre4' => 0,
             'totalColchonesChina' => $totalColchonesChina,
             'totalColchonesGribetz' => $totalColchonesGribetz,
             'distribucionCalibre2China' => $distribucionCalibre2China,
             'distribucionCalibre2Gribetz' => $distribucionCalibre2Gribetz,
             'porcentajeCalibre2China' => $porcentajeCalibre2China,
             'porcentajeCalibre2Gribetz' => $porcentajeCalibre2Gribetz,
+        ];
+    }
+
+    private static function getEmptyResults()
+    {
+        return [
+            'totalTimeByStation' => array_fill_keys([
+                'fileteado_tapas', 'fileteado_falsos', 'maquina_rufflex',
+                'bordadora', 'decorado_falso', 'falso_pillow',
+                'encintado', 'maquina_plana', 'marquillado',
+                'zona_pega', 'cierre', 'empaque',
+                'acolchadora_gribetz', 'acolchadora_china'
+            ], 0),
+            'totalClosures' => 0,
+            'colchonesCantidad' => 0,
+            'colchonetasCantidad' => 0,
+            'metrosLinealesGribetz' => 0,
+            'metrosLinealesChina' => 0,
+            'cantidadColchonesCalibre1' => 0,
+            'cantidadColchonesCalibre2' => 0,
+            'cantidadColchonesCalibre3' => 0,
+            'cantidadColchonesCalibre4' => 0,
+            'totalColchonesChina' => 0,
+            'totalColchonesGribetz' => 0,
+            'distribucionCalibre2China' => 0,
+            'distribucionCalibre2Gribetz' => 0,
+            'porcentajeCalibre2China' => 0,
+            'porcentajeCalibre2Gribetz' => 0,
         ];
     }
 
@@ -239,11 +249,11 @@ class Orden extends Model
     private static function getPerimetro($anchoTapa)
     {
         $perimetros = [
-            100 => 590, // 5.9 metros en centímetros
-            120 => 630, // 6.3 metros en centímetros
-            140 => 670, // 6.7 metros en centímetros
-            160 => 710, // 7.1 metros en centímetros
-            200 => 810, // 8.1 metros en centímetros
+            100 => 590,
+            120 => 630,
+            140 => 670,
+            160 => 710,
+            200 => 810,
         ];
 
         $perimetro = $perimetros[$anchoTapa] ?? 0;

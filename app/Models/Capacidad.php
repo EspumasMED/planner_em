@@ -19,6 +19,6 @@ class Capacidad extends Model
 
     public function mantenimientosProgramados()
     {
-        return $this->hasMany(MantenimientoProgramado::class);
+        return $this->hasMany(MantenimientoProgramado::class, 'estacion_trabajo', 'estacion_trabajo');
     }
 }

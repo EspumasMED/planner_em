@@ -27,9 +27,9 @@ class MantenimientoProgramadoResource extends Resource
         return $form
             ->schema([
                 Forms\Components\DatePicker::make('fecha_mantenimiento')
-                    ->required()
-                    ->minDate(now())
-                    ->afterOrEqual(today()),
+                    ->required(),
+                    // ->minDate(now())
+                    // ->afterOrEqual(today())
                 Forms\Components\Select::make('hora_inicio')
                     ->options(MantenimientoProgramado::getOpcionesHora())
                     ->required()

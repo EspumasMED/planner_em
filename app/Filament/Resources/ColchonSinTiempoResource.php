@@ -12,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use pxlrbt\FilamentExcel\Actions\Tables\ExportBulkAction as TablesExportBulkAction;
+use pxlrbt\FilamentExcel\Exports\ExcelExport;
 
 class ColchonSinTiempoResource extends Resource
 {
@@ -47,12 +49,17 @@ class ColchonSinTiempoResource extends Resource
                 //
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),
+                TablesExportBulkAction::make()->exports([
+                    ExcelExport::make('table')->fromTable()->withFilename('Colchones sin tiempo -'. date('Y-m-d')),
+                    ExcelExport::make('form')->fromForm()->withFilename('Colchones sin tiempo -'. date('Y-m-d')),
+                ])
                 ]),
+                
             ]);
     }
 

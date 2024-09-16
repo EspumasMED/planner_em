@@ -52,6 +52,7 @@ class Orden extends Model
             Log::debug('No se encontraron órdenes para procesar.');
             return self::getEmptyResults();
         }
+    
 
         $timesByStation = TiempoProduccion::all()->keyBy('referencia_colchon');
 

@@ -19,7 +19,10 @@ class ColchonSinTiempoResource extends Resource
 {
     protected static ?string $model = ColchonSinTiempo::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-question-mark-circle';
+    protected static ?int $navigationSort = 5;
+    protected static ?string $navigationLabel = 'Referencias sin tiempos';
+    protected static ?string $pluralModelLabel = 'Referencias sin tiempos';
 
     public static function form(Form $form): Form
     {

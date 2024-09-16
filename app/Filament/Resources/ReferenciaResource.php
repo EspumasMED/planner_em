@@ -18,7 +18,7 @@ class ReferenciaResource extends Resource
     protected static ?string $model = Referencia::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-cube';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 6;
     protected static ?string $navigationLabel = 'Referencias Colchones';
     protected static ?string $pluralModelLabel = 'Referencias Colchones';
 

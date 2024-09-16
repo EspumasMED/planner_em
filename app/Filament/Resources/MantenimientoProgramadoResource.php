@@ -17,7 +17,10 @@ class MantenimientoProgramadoResource extends Resource
 {
     protected static ?string $model = MantenimientoProgramado::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+    protected static ?int $navigationSort = 6;
+    protected static ?string $navigationLabel = 'Matenimientos programados';
+    protected static ?string $pluralModelLabel = 'Matenimientos programados';
 
     public static function form(Form $form): Form
     {

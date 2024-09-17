@@ -33,7 +33,6 @@ class MantenimientoProgramado extends Model
     {
         static::created(function ($mantenimiento) {
             Log::info("Nuevo mantenimiento creado con ID: {$mantenimiento->id}");
-            $mantenimiento->restarCapacidad();
         });
     }
 
@@ -66,6 +65,17 @@ class MantenimientoProgramado extends Model
         return array_combine(range(1, $capacidad->numero_maquinas), range(1, $capacidad->numero_maquinas));
     }
 
+    public function actualizarCapacidadSiToca()
+    {
+        Log::info("Verificando si toca actualizar capacidad para mantenimiento ID: {$this->id}");
+        if ($this->fecha_mantenimiento->isToday()) {
+            Log::info("Es el día del mantenimiento. Procediendo a actualizar la capacidad.");
+            $this->restarCapacidad();
+        } else {
+            Log::info("No es el día del mantenimiento. No se actualiza la capacidad.");
+        }
+    }
+
     public function restarCapacidad()
     {
         Log::info("Iniciando resta de capacidad para mantenimiento ID: {$this->id}");
@@ -85,7 +95,6 @@ class MantenimientoProgramado extends Model
             Log::info("Número de máquinas en la estación: {$capacidad->numero_maquinas}");
             Log::info("Número de máquinas afectadas por el mantenimiento: {$this->numero_maquinas}");
             
-            // Calculamos el impacto real considerando el número de máquinas
             $impactoReal = ($tiempoMantenimiento * $this->numero_maquinas) / $capacidad->numero_maquinas;
             Log::info("Impacto real calculado: {$impactoReal} minutos");
             
@@ -106,9 +115,9 @@ class MantenimientoProgramado extends Model
         $inicio = Carbon::parse($this->hora_inicio);
         $fin = Carbon::parse($this->hora_fin);
         
-        // Aseguramos que el fin sea posterior al inicio
+        // Aseguramos que el fin sea siempre después del inicio
         if ($fin->lt($inicio)) {
-            $fin->addDay(); // Añadimos un día si el fin es antes que el inicio
+            $fin->addDay();
         }
         
         $duracion = $fin->diffInMinutes($inicio);

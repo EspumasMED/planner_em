@@ -92,21 +92,29 @@ class MantenimientoProgramado extends Model
             }
             
             Log::info("Capacidad actual: {$capacidad->tiempo_jornada} minutos");
-            Log::info("Número de máquinas en la estación: {$capacidad->numero_maquinas}");
+            Log::info("Número total de máquinas en la estación: {$capacidad->numero_maquinas}");
             Log::info("Número de máquinas afectadas por el mantenimiento: {$this->numero_maquinas}");
             
-            $impactoReal = ($tiempoMantenimiento * $this->numero_maquinas) / $capacidad->numero_maquinas;
+            // Calculamos la proporción de máquinas afectadas
+            $proporcionMaquinasAfectadas = $this->numero_maquinas / $capacidad->numero_maquinas;
+            Log::info("Proporción de máquinas afectadas: {$proporcionMaquinasAfectadas}");
+            
+            // Calculamos el impacto real considerando la proporción de máquinas afectadas
+            $impactoReal = abs($tiempoMantenimiento * $proporcionMaquinasAfectadas);
             Log::info("Impacto real calculado: {$impactoReal} minutos");
             
-            // Aseguramos que siempre restemos
-            $nuevaJornada = max(0, $capacidad->tiempo_jornada - abs($impactoReal));
-            
+            // Calculamos la nueva jornada, asegurándonos de restar
+            $nuevaJornada = max(0, $capacidad->tiempo_jornada - $impactoReal);
             Log::info("Nueva jornada calculada: {$nuevaJornada} minutos");
             
+            // Guardamos la nueva capacidad
+            $capacidadAnterior = $capacidad->tiempo_jornada;
             $capacidad->tiempo_jornada = $nuevaJornada;
             $capacidad->save();
             
-            Log::info("Capacidad actualizada y guardada. Nueva jornada laboral: {$nuevaJornada} minutos");
+            $reduccionTotal = $capacidadAnterior - $nuevaJornada;
+            Log::info("Capacidad actualizada y guardada. Jornada anterior: {$capacidadAnterior} minutos, Nueva jornada: {$nuevaJornada} minutos");
+            Log::info("Reducción total de capacidad: {$reduccionTotal} minutos");
         });
     }
 

@@ -35,6 +35,6 @@ return Application::configure(basePath: dirname(__DIR__))
             }
 
             Log::info('Tarea programada de actualización de capacidad completada');
-        })->dailyAt('00:01')->name('actualizar-capacidad-diaria'); // Cambiado a everyMinute() para pruebas
-    })  //cambiar ->everyMinute()  por ->dailyAt('00:01') para salir del modo de prueva
+        })->everyMinute()->name('actualizar-capacidad-diaria'); // Cambiado a everyMinute() para pruebas y dailyAt('00:01') para el dia especifico
+    }) 
     ->create();

@@ -1,33 +1,27 @@
-<x-filament-widgets::widget>
+<x-filament::widget>
     <x-filament::section>
-        <div style="
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 15px; 
-            padding: 15px;
-            width: 100%;
-            box-sizing: border-box;
-        ">
-            @foreach ($this->getCapacidades() as $capacidad)
-                @php
-                    $capacidadEstacion = $capacidad->numero_maquinas * $capacidad->tiempo_jornada;
-                @endphp
-                <div style="
-                    flex: 1 1 calc(25% - 15px); /* Ajusta el tamaño de las tarjetas a 25% menos el espacio de separación */
-                    border: 1px solid #ddd; 
-                    border-radius: 8px; 
-                    padding: 15px; 
-                    text-align: center; 
-                    font-size: 14px; 
-                    background-color: #f9f9f9; 
-                    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-                    box-sizing: border-box;
-                ">
-                    <strong style="display: block; font-size: 16px;">{{ $capacidad->estacion_trabajo }}</strong>
-                    Capacidad: {{ $capacidadEstacion }} minutos
+        <div class="p-4 bg-white rounded-lg shadow w-full">
+            <h3 class="text-lg font-medium text-gray-900 mb-4">Ajuste de Capacidad</h3>
+            
+            <div class="mb-4">
+                <label for="porcentajeOptimismo" class="block text-sm font-medium text-gray-700 mb-2">
+                    Porcentaje de Optimismo: {{ $porcentajeOptimismo }}%
+                </label>
+                <input type="range" wire:model.live="porcentajeOptimismo" min="0" max="100" step="1" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer">
+            </div>
+
+            @if(count($capacidades) > 0)
+                <div class="mb-4">
+                    <p class="text-sm text-gray-600">Tiempo de Jornada Original (100%): {{ $capacidades[0]['tiempo_jornada_original'] }}</p>
+                    <p class="text-sm text-gray-600">Tiempo de Jornada Ajustado: {{ $capacidades[0]['tiempo_jornada_ajustado'] }}</p>
                 </div>
-            @endforeach
+            @else
+                <p class="text-sm text-gray-600 mb-4">No hay datos disponibles</p>
+            @endif
+
+            <button wire:click="actualizarTablaCapacidad" class="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded border border-orange-600 shadow-md transition duration-300 ease-in-out transform hover:scale-105" style="color: #fe890b;">
+                Actualizar Capacidad
+            </button>
         </div>
     </x-filament::section>
-</x-filament-widgets::widget>
->>>>>>> main
+</x-filament::widget>

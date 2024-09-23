@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use App\Filament\Resources\CapacidadResource\Widgets\CapacidadSliderWidget;
 
 class CapacidadResource extends Resource
 {
@@ -107,6 +108,12 @@ class CapacidadResource extends Resource
     {
         return [
             //
+        ];
+    }
+    public static function getWidgets(): array
+    {
+        return [
+            CapacidadSliderWidget::class,
         ];
     }
 

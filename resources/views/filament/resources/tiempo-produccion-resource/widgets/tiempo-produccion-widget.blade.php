@@ -1,69 +1,69 @@
 <x-filament-widgets::widget>
 
-<x-filament::section>
-    <x-filament::card class="bg-white p-4 sm:p-6 border border-gray-200 rounded-lg shadow-md max-w-4xl mx-auto">
-        <form wire:submit.prevent="filterResults" class="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-4 sm:gap-6">
-            <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-6">
-                <!-- Rango de fechas -->
-                <div class="sm:w-auto flex flex-col items-center gap-2">
-                    <span class="text-sm font-bold" style="color: #fe890b;">Rango de fechas</span>
-                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
-                        <x-filament::input
-                            wire:model="startDate"
-                            id="startDate"
-                            type="date"
-                            class="sm:w-36 p-2 rounded-md font-bold"
-                            style="background-color: #fe890b87; border: none; outline: none;"
-                        />
-                        <x-filament::input
-                            wire:model="endDate"
-                            id="endDate"
-                            type="date"
-                            class="sm:w-36 p-2 rounded-md font-bold"
-                            style="background-color: #fe890b87; border: none; outline: none;"
-                        />
+    <x-filament::section>
+        <x-filament::card class="bg-white p-4 sm:p-6 border border-gray-200 rounded-lg shadow-md max-w-4xl mx-auto">
+            <form wire:submit.prevent="filterResults" class="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-4 sm:gap-6">
+                <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-6">
+                    <!-- Rango de fechas -->
+                    <div class="sm:w-auto flex flex-col items-center gap-2">
+                        <span class="text-sm font-bold" style="color: #fe890b;">Rango de fechas</span>
+                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+                            <x-filament::input
+                                wire:model="startDate"
+                                id="startDate"
+                                type="date"
+                                class="sm:w-36 p-2 rounded-md font-bold"
+                                style="background-color: #fe890b87; border: none; outline: none;"
+                            />
+                            <x-filament::input
+                                wire:model="endDate"
+                                id="endDate"
+                                type="date"
+                                class="sm:w-36 p-2 rounded-md font-bold"
+                                style="background-color: #fe890b87; border: none; outline: none;"
+                            />
+                        </div>
                     </div>
+
+                    <div class="flex gap-6">
+                        <!-- Incluir Clientes -->
+                        <div class="sm:w-auto flex flex-col items-end gap-2">
+                            <span class="text-sm font-bold mb-1" style="color: #fe890b;">Clientes</span>
+                            <x-filament::input
+                                wire:model="includeClientes"
+                                id="includeClientes"
+                                type="checkbox"
+                                class="w-8 h-9 rounded cursor-pointer"
+                                style="border: 2px solid #28a745; background-color: #fe890b;"
+                            />
+                        </div>
+
+                        <!-- Incluir Stock -->
+                        <div class="sm:w-auto flex flex-col items-end gap-2">
+                            <span class="text-sm font-bold mb-1" style="color: #fe890b;">Stock</span>
+                            <x-filament::input
+                                wire:model="includeStock"
+                                id="includeStock"
+                                type="checkbox"
+                                class="w-8 h-9 rounded cursor-pointer"
+                                style="border: 2px solid #28a745; background-color: #fe890b;"
+                            />
+                        </div>
+                    </div>
+
+                    <!-- Botón de filtrar -->
+                    <x-filament::button
+                        type="submit"
+                        wire:submit.prevent="filterResults"
+                        class="px-6 py-2 text-white rounded-lg cursor-pointer text-base font-bold whitespace-nowrap"
+                        style="background-color: #fe890b; margin-top: 30px; padding:8px; margin-left: 15px;"
+                    >
+                        Filtrar
+                    </x-filament::button>
                 </div>
-
-                <div class="flex gap-6">
-                    <!-- Incluir Clientes -->
-                    <div class="sm:w-auto flex flex-col items-end gap-2">
-                        <span class="text-sm font-bold mb-1" style="color: #fe890b;">Clientes</span>
-                        <x-filament::input
-                            wire:model="includeClientes"
-                            id="includeClientes"
-                            type="checkbox"
-                            class="w-8 h-9 rounded cursor-pointer"
-                            style="border: 2px solid #28a745; background-color: #fe890b;"
-                        />
-                    </div>
-
-                    <!-- Incluir Stock -->
-                    <div class="sm:w-auto flex flex-col items-end gap-2">
-                        <span class="text-sm font-bold mb-1" style="color: #fe890b;">Stock</span>
-                        <x-filament::input
-                            wire:model="includeStock"
-                            id="includeStock"
-                            type="checkbox"
-                            class="w-8 h-9 rounded cursor-pointer"
-                            style="border: 2px solid #28a745; background-color: #fe890b;"
-                        />
-                    </div>
-                </div>
-
-                <!-- Botón de filtrar -->
-                <x-filament::button
-                    type="submit"
-                    class="px-6 py-2 text-white rounded-lg cursor-pointer text-base font-bold whitespace-nowrap"
-                    style="background-color: #fe890b; margin-top: 30px; padding:8px; margin-left: 15px;"
-                >
-                    Filtrar
-                </x-filament::button>
-            </div>
-        </form>
-    </x-filament::card>
-</x-filament::section>
-
+            </form>
+        </x-filament::card>
+    </x-filament::section>
 
     <x-filament::section>
         <!-- Sección de tarjetas que muestran la capacidad y el tiempo necesario -->

@@ -1,122 +1,69 @@
 <x-filament-widgets::widget>
 
-    <x-filament::section>
-        <!-- Sección de formulario en una tarjeta unificada -->
-        <x-filament::card
-            style="
-                display: flex; 
-                flex-direction: column;
-                gap: 20px;
-                background-color: #fff;
-                padding: 20px;
-                border: 1px solid #ddd;
-                border-radius: 8px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                max-width: 1000px;
-                width: 100%;
-            "
-        >
-            <!-- Formulario de filtros -->
-            <form wire:submit.prevent="filterResults" style="
-                display: flex; 
-                align-items: center; 
-                justify-content: flex-end;
-                gap: 20px;
-            ">
+<x-filament::section>
+    <x-filament::card class="bg-white p-4 sm:p-6 border border-gray-200 rounded-lg shadow-md max-w-4xl mx-auto">
+        <form wire:submit.prevent="filterResults" class="flex flex-col sm:flex-row items-start sm:items-end justify-end gap-4 sm:gap-6">
+            <div class="flex flex-col sm:flex-row items-center justify-end gap-4 sm:gap-6">
                 <!-- Rango de fechas -->
-                <div style="
-                    display: flex; 
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 5px;
-                ">
-                    <span style="font-size: 14px; color: #fe890b; font-weight: bold;">Rango de fechas</span>
-                    <div style="display: flex; gap: 20px;">
-                        <x-filament::input wire:model="startDate" id="startDate" type="date" style="
-                            border: none; 
-                            outline: none; 
-                            padding: 10px; 
-                            width: 150px; 
-                            background-color: #fe890b87;
-                            border-radius: 5px;
-                            font-weight: bold;
-                        " />
-                        <x-filament::input wire:model="endDate" id="endDate" type="date" style="
-                            border: none; 
-                            outline: none; 
-                            padding: 10px; 
-                            width: 150px; 
-                            background-color: #fe890b87;
-                            border-radius: 5px;
-                            font-weight: bold;
-                        " />
+                <div class="sm:w-auto flex flex-col items-center gap-2">
+                    <span class="text-sm font-bold" style="color: #fe890b;">Rango de fechas</span>
+                    <div class="flex flex-col sm:flex-row gap-2 sm:gap-4 w-full sm:w-auto">
+                        <x-filament::input
+                            wire:model="startDate"
+                            id="startDate"
+                            type="date"
+                            class="sm:w-36 p-2 rounded-md font-bold"
+                            style="background-color: #fe890b87; border: none; outline: none;"
+                        />
+                        <x-filament::input
+                            wire:model="endDate"
+                            id="endDate"
+                            type="date"
+                            class="sm:w-36 p-2 rounded-md font-bold"
+                            style="background-color: #fe890b87; border: none; outline: none;"
+                        />
                     </div>
                 </div>
 
-                <!-- Incluir Clientes -->
-                <div style="
-                    display: flex; 
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 5px;
-                ">
-                    <span style="font-size: 14px; color: #fe890b; font-weight: bold;">Clientes</span>
-                    <label style="
-                        display: flex; 
-                        justify-content: center;
-                        align-items: center;
-                    ">
-                        <x-filament::input wire:model="includeClientes" id="includeClientes" type="checkbox" style="
-                            width: 42px; 
-                            height: 42px;
-                            border: 2px solid #28a745;
-                            border-radius: 4px;
-                            background-color: #fe890b;
-                            cursor: pointer;
-                        " />
-                    </label>
-                </div>
+                <div class="flex gap-6">
+                    <!-- Incluir Clientes -->
+                    <div class="sm:w-auto flex flex-col items-end gap-2">
+                        <span class="text-sm font-bold mb-1" style="color: #fe890b;">Clientes</span>
+                        <x-filament::input
+                            wire:model="includeClientes"
+                            id="includeClientes"
+                            type="checkbox"
+                            class="w-8 h-9 rounded cursor-pointer"
+                            style="border: 2px solid #28a745; background-color: #fe890b;"
+                        />
+                    </div>
 
-                <!-- Incluir Stock -->
-                <div style="
-                    display: flex; 
-                    flex-direction: column;
-                    align-items: center;
-                    gap: 5px;
-                ">
-                    <span style="font-size: 14px; color: #fe890b; font-weight: bold;">Stock</span>
-                    <label style="
-                        display: flex; 
-                        justify-content: center;
-                        align-items: center;
-                    ">
-                        <x-filament::input wire:model="includeStock" id="includeStock" type="checkbox" style="
-                            width: 42px; 
-                            height: 42px;
-                            border: 2px solid #28a745;
-                            border-radius: 4px;
-                            background-color: #fe890b;
-                            cursor: pointer;
-                        " />
-                    </label>
+                    <!-- Incluir Stock -->
+                    <div class="sm:w-auto flex flex-col items-end gap-2">
+                        <span class="text-sm font-bold mb-1" style="color: #fe890b;">Stock</span>
+                        <x-filament::input
+                            wire:model="includeStock"
+                            id="includeStock"
+                            type="checkbox"
+                            class="w-8 h-9 rounded cursor-pointer"
+                            style="border: 2px solid #28a745; background-color: #fe890b;"
+                        />
+                    </div>
                 </div>
 
                 <!-- Botón de filtrar -->
-                <x-filament::button type="submit" style="
-                    padding: 15px 25px; 
-                    background-color: #fe890b; 
-                    color: white; 
-                    border: none; 
-                    border-radius: 8px; 
-                    cursor: pointer;
-                    font-size: 20px;
-                    margin-top: 25px;
-                ">
+                <x-filament::button
+                    type="submit"
+                    class="px-6 py-2 text-white rounded-lg cursor-pointer text-base font-bold whitespace-nowrap"
+                    style="background-color: #fe890b; margin-top: 30px; padding:8px; margin-left: 15px;"
+                >
                     Filtrar
                 </x-filament::button>
-            </form>
-        </x-filament::card>
-    </x-filament::section>
+            </div>
+        </form>
+    </x-filament::card>
+</x-filament::section>
+
 
     <x-filament::section>
         <!-- Sección de tarjetas que muestran la capacidad y el tiempo necesario -->

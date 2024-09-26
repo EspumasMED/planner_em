@@ -197,8 +197,7 @@
                     <ul class="grid grid-cols-2 gap-2">
                         <li><span class="text-orange-500">Calibre 1:</span> {{ number_format($cantidadColchonesCalibre1) }} COL</li>
                         <li><span class="text-orange-500">Calibre 2:</span> {{ number_format($cantidadColchonesCalibre2) }} COL</li>
-                        <li><span class="text-orange-500">Calibre 3:</span> {{ number_format($cantidadColchonesCalibre3) }} COL</li>
-                        <li><span class="text-orange-500">Calibre 4:</span> {{ number_format($cantidadColchonesCalibre4) }} COL</li>
+                        <li><span class="text-orange-500">Calibre 3/4:</span> {{ number_format($cantidadColchonesCalibre3) }} COL</li>
                     </ul>
                 </div>
                 

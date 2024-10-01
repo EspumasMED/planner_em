@@ -9,20 +9,18 @@ RUN apt-get update && apt-get upgrade -y && \
     apt-get install -y bash git sudo openssh-client \
     libxml2-dev libonig-dev autoconf gcc g++ make npm \
     libfreetype6-dev libjpeg-turbo8-dev libpng-dev libzip-dev \
-    curl php-cli php-mbstring php-xml php-zip unzip \
-    nano software-properties-common
+    curl unzip nano software-properties-common
 
-# Agrega el repositorio de PHP 8.1 y lo instala junto con las extensiones requeridas
+# Agrega el repositorio de PHP 8.2 y lo instala junto con las extensiones requeridas
 RUN add-apt-repository ppa:ondrej/php -y && \
     apt-get update && \
-    apt-get install -y php8.1-fpm php8.1-cli php8.1-common php8.1-mysql \
-    php8.1-zip php8.1-gd php8.1-mbstring php8.1-curl php8.1-xml php8.1-bcmath \
-    php8.1-intl php8.1-readline php8.1-pcov
+    apt-get install -y php8.2=8.2.12* php8.2-fpm=8.2.12* php8.2-cli=8.2.12* php8.2-common=8.2.12* \
+    php8.2-mysql php8.2-zip php8.2-gd php8.2-mbstring php8.2-curl php8.2-xml php8.2-bcmath \
+    php8.2-intl php8.2-readline php8.2-pcov php8.2-dev
 
 # Instala Swoole desde PECL
-RUN apt-get install -y php8.1-dev && \
-    pecl install swoole && \
-    echo "extension=swoole.so" > /etc/php/8.1/mods-available/swoole.ini && \
+RUN pecl install swoole && \
+    echo "extension=swoole.so" > /etc/php/8.2/mods-available/swoole.ini && \
     phpenmod swoole
 
 # Instala Composer

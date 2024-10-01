@@ -44,7 +44,8 @@ class DashboardPanelProvider extends PanelProvider
                
             ])
             ->plugins([
-                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make()
+                \BezhanSalleh\FilamentShield\FilamentShieldPlugin::make(),
+                \TomatoPHP\FilamentPWA\FilamentPWAPlugin::make()
             ])
             ->middleware([
                 EncryptCookies::class,

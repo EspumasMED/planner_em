@@ -17,6 +17,27 @@ class PWASettings extends SettingsMigration
         $this->migrator->add('pwa.pwa_icons_512x512', '');
         $this->migrator->add('pwa.pwa_start_url', '/');
 
-        
+        // Agregar los nuevos iconos
+        $this->migrator->add('pwa.pwa_icons_72x72', '');
+        $this->migrator->add('pwa.pwa_icons_96x96', '');
+        $this->migrator->add('pwa.pwa_icons_128x128', '');
+        $this->migrator->add('pwa.pwa_icons_144x144', '');
+        $this->migrator->add('pwa.pwa_icons_152x152', '');
+        $this->migrator->add('pwa.pwa_icons_384x384', '');
+
+        // Agregar las imágenes de splash screen
+        $this->migrator->add('pwa.pwa_splash_640x1136', '');
+        $this->migrator->add('pwa.pwa_splash_750x1334', '');
+        $this->migrator->add('pwa.pwa_splash_828x1792', '');
+        $this->migrator->add('pwa.pwa_splash_1125x2436', '');
+        $this->migrator->add('pwa.pwa_splash_1242x2208', '');
+        $this->migrator->add('pwa.pwa_splash_1242x2688', '');
+        $this->migrator->add('pwa.pwa_splash_1536x2048', '');
+        $this->migrator->add('pwa.pwa_splash_1668x2224', '');
+        $this->migrator->add('pwa.pwa_splash_1668x2388', '');
+        $this->migrator->add('pwa.pwa_splash_2048x2732', '');
+
+        // Agregar los atajos de PWA (puedes personalizarlos según tus necesidades)
+        $this->migrator->add('pwa.pwa_shortcuts', []);
     }
 }

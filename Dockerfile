@@ -11,6 +11,9 @@ RUN apt-get update && apt-get upgrade -y && \
     libfreetype6-dev libjpeg-turbo8-dev libpng-dev libzip-dev \
     curl unzip nano software-properties-common
 
+# Instala MySQL
+RUN apt-get install -y mysql-server
+
 # Agrega el repositorio de PHP 8.2 y lo instala junto con las extensiones requeridas
 RUN add-apt-repository ppa:ondrej/php -y && \
     apt-get update && \
@@ -26,6 +29,13 @@ RUN pecl install swoole && \
 # Instala Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
+# Configura MySQL
+RUN service mysql start && \
+    mysql -e "CREATE DATABASE planner_em_db;" && \
+    mysql -e "CREATE USER 'luiscarrascal'@'%' IDENTIFIED BY '1524';" && \
+    mysql -e "GRANT ALL PRIVILEGES ON planner_em_db.* TO 'luiscarrascal'@'%';" && \
+    mysql -e "FLUSH PRIVILEGES;"
+
 # Establece el directorio de trabajo
 WORKDIR /app
 
@@ -34,6 +44,42 @@ COPY . .
 
 # Copia el archivo .env.example a .env si no existe
 RUN if [ ! -f .env ]; then cp .env.example .env; fi
+
+# Configura todas las variables en el archivo .env
+RUN sed -i 's/APP_NAME=.*/APP_NAME="Planner EM"/' .env && \
+    sed -i 's/APP_ENV=.*/APP_ENV=local/' .env && \
+    sed -i 's/APP_DEBUG=.*/APP_DEBUG=true/' .env && \
+    sed -i 's/APP_URL=.*/APP_URL=http:\/\/localhost/' .env && \
+    sed -i 's/DB_CONNECTION=.*/DB_CONNECTION=mysql/' .env && \
+    sed -i 's/DB_HOST=.*/DB_HOST=172.17.0.1/' .env && \
+    sed -i 's/DB_PORT=.*/DB_PORT=3306/' .env && \
+    sed -i 's/DB_DATABASE=.*/DB_DATABASE=planner_em_db/' .env && \
+    sed -i 's/DB_USERNAME=.*/DB_USERNAME=luiscarrascal/' .env && \
+    sed -i 's/DB_PASSWORD=.*/DB_PASSWORD=1524/' .env && \
+    sed -i 's/BROADCAST_DRIVER=.*/BROADCAST_DRIVER=log/' .env && \
+    sed -i 's/CACHE_DRIVER=.*/CACHE_DRIVER=file/' .env && \
+    sed -i 's/FILESYSTEM_DISK=.*/FILESYSTEM_DISK=local/' .env && \
+    sed -i 's/QUEUE_CONNECTION=.*/QUEUE_CONNECTION=sync/' .env && \
+    sed -i 's/SESSION_DRIVER=.*/SESSION_DRIVER=file/' .env && \
+    sed -i 's/SESSION_LIFETIME=.*/SESSION_LIFETIME=120/' .env && \
+    sed -i 's/MEMCACHED_HOST=.*/MEMCACHED_HOST=127.0.0.1/' .env && \
+    sed -i 's/REDIS_HOST=.*/REDIS_HOST=127.0.0.1/' .env && \
+    sed -i 's/REDIS_PASSWORD=.*/REDIS_PASSWORD=null/' .env && \
+    sed -i 's/REDIS_PORT=.*/REDIS_PORT=6379/' .env && \
+    sed -i 's/MAIL_MAILER=.*/MAIL_MAILER=smtp/' .env && \
+    sed -i 's/MAIL_HOST=.*/MAIL_HOST=smtp.mailersend.net/' .env && \
+    sed -i 's/MAIL_PORT=.*/MAIL_PORT=587/' .env && \
+    sed -i 's/MAIL_USERNAME=.*/MAIL_USERNAME=MS_Vb1rjI@trial-3yxj6ljmmmxldo2r.mlsender.net/' .env && \
+    sed -i 's/MAIL_PASSWORD=.*/MAIL_PASSWORD=eWnEvTCwlchI0E8M/' .env && \
+    sed -i 's/MAIL_ENCRYPTION=.*/MAIL_ENCRYPTION=tls/' .env && \
+    sed -i 's/MAIL_FROM_ADDRESS=.*/MAIL_FROM_ADDRESS="MS_Vb1rjI@trial-3yxj6ljmmmxldo2r.mlsender.net"/' .env && \
+    sed -i 's/MAIL_FROM_NAME=.*/MAIL_FROM_NAME="${APP_NAME}"/' .env && \
+    sed -i 's/AWS_ACCESS_KEY_ID=.*/AWS_ACCESS_KEY_ID=/' .env && \
+    sed -i 's/AWS_SECRET_ACCESS_KEY=.*/AWS_SECRET_ACCESS_KEY=/' .env && \
+    sed -i 's/AWS_DEFAULT_REGION=.*/AWS_DEFAULT_REGION=us-east-1/' .env && \
+    sed -i 's/AWS_BUCKET=.*/AWS_BUCKET=/' .env && \
+    sed -i 's/AWS_USE_PATH_STYLE_ENDPOINT=.*/AWS_USE_PATH_STYLE_ENDPOINT=false/' .env && \
+    sed -i 's/OCTANE_SERVER=.*/OCTANE_SERVER=swoole/' .env
 
 # Instala las dependencias del proyecto
 RUN composer install --no-interaction --optimize-autoloader --no-dev
@@ -50,13 +96,18 @@ RUN composer require laravel/octane spiral/roadrunner --no-interaction
 # Instala Octane con Swoole
 RUN php artisan octane:install --server=swoole
 
-# Optimiza la configuración para producción
-RUN php artisan config:cache && \
-    php artisan route:cache && \
-    php artisan view:cache
+# Crea un script de inicio para asegurar que MySQL esté en funcionamiento antes de ejecutar las migraciones
+RUN echo '#!/bin/bash\n\
+service mysql start\n\
+while ! mysqladmin ping -h"localhost" --silent; do\n\
+    sleep 1\n\
+done\n\
+php artisan migrate --force\n\
+php artisan octane:start --server=swoole --host=0.0.0.0 --port=8000\n\
+' > /app/start.sh && chmod +x /app/start.sh
 
-# Comando para iniciar la aplicación con Octane y Swoole
-CMD ["php", "artisan", "octane:start", "--server=swoole", "--host=0.0.0.0", "--port=8000"]
+# Comando para iniciar MySQL, ejecutar migraciones y la aplicación
+CMD ["/app/start.sh"]
 
 # Expone el puerto 8000 para acceder a la aplicación
 EXPOSE 8000

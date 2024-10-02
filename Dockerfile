@@ -14,7 +14,7 @@ RUN apt-get update && apt-get upgrade -y && \
 # Agrega el repositorio de PHP 8.2 y lo instala junto con las extensiones requeridas
 RUN add-apt-repository ppa:ondrej/php -y && \
     apt-get update && \
-    apt-get install -y php8.2=8.2.12* php8.2-fpm=8.2.12* php8.2-cli=8.2.12* php8.2-common=8.2.12* \
+    apt-get install -y php8.2 php8.2-fpm php8.2-cli php8.2-common \
     php8.2-mysql php8.2-zip php8.2-gd php8.2-mbstring php8.2-curl php8.2-xml php8.2-bcmath \
     php8.2-intl php8.2-readline php8.2-pcov php8.2-dev
 
